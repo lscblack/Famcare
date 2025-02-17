@@ -25,7 +25,7 @@ class FamCare extends ConsumerWidget {
           routes: {
             '/home': (context) => appState.isNewUser == true
                 ? Splashscreen1()
-                : Splashscreen1(),
+                : Homepage(),
           },
         );
       },
