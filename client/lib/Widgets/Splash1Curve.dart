@@ -22,7 +22,7 @@ class _Splash1curveState extends State<Splash1curve> {
               // Background curved container
               Positioned(
                 width: 700,
-                height:600,
+                height:550,
                 child: Container(
                   alignment: Alignment.bottomCenter,
                   decoration: BoxDecoration(
@@ -69,7 +69,7 @@ class _Splash1curveState extends State<Splash1curve> {
                           style: TextStyle(
                             fontSize: 34,
                             fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 28, 176, 221),
+                            color: Color(0xFF5AB4F1),
                           ),
                         ),
                       ],
