@@ -1,16 +1,15 @@
-# client
 
-A new Flutter project.
+### Project Description:
 
-## Getting Started
+The **FamCare** app is a family health management platform designed to simplify the coordination of caregiving tasks, medication schedules, and health records. The app utilizes **Flutter** for the frontend, **FastAPI** for the backend, **Firebase** for authentication and database management, and **Machine Learning algorithms** for predictive features, ensuring a seamless user experience for family health management.
 
-This project is a starting point for a Flutter application.
+### Setup Instructions:
 
-A few resources to get you started if this is your first Flutter project:
+To get started with FamCare, follow the detailed setup guide for creating the initial environment, including the implementation of the **splash screen** and **homepage**:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. **[Setting up the Project Environment and Splash Screen](2-set-up-project-environment.md)**  
+   This document covers the setup of the project environment, as well as the creation of the **splash screen** and **homepage**. It also includes the integration of **Flutter Riverpod** for state management, helping coordinate different screens based on user interactions.
+   
+   ![alt text](../client/assets/screenshots/image.png)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This **README** serves as the main entry point for the FamCare project, linking to essential setup instructions and detailed steps for running and extending the app.
