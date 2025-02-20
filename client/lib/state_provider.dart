@@ -36,6 +36,8 @@ class AppStateNotifier extends StateNotifier<AppState> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isNewUser', value);
   }
+
+  void nextOnboardingPage() {}
 }
 
 // Riverpod provider for state management
