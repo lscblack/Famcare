@@ -1,12 +1,14 @@
-import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:client/Pages/HomePage.dart';
+import 'package:client/screens/auth/login_screen.dart';
+import 'package:client/screens/auth/register_screen.dart';
 import 'package:client/Splash/SplashScreen1.dart';
-import 'state_provider.dart'; // Import Riverpod state
+import 'state_provider.dart';
 
 void main() {
-  runApp(const ProviderScope(child: FamCare())); // Wrap in ProviderScope
+  runApp(const ProviderScope(child: FamCare()));
 }
 
 class FamCare extends ConsumerWidget {
@@ -14,23 +16,39 @@ class FamCare extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the FutureProvider to load the app state
     final appStateAsync = ref.watch(appStateFutureProvider);
 
     return appStateAsync.when(
       data: (appState) {
-        // Once the state is loaded, navigate accordingly
+        if (appState == null) {
+          return MaterialApp(
+            home: Scaffold(
+              body: Center(child: Text('Error: App state is null')),
+            ),
+          );
+        }
         return MaterialApp(
-          initialRoute: '/home',
+          initialRoute: '/login',
           routes: {
-            '/home': (context) => appState.isNewUser == true
-                ? Splashscreen1()
-                : Homepage(),
+            '/home': (context) => (appState.isNewUser ?? false) ? Splashscreen1() : Homepage(),
+            '/login': (context) => const LoginScreen(),
+            '/register': (context) => const RegisterScreen(),
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()), // Show loading while waiting for data
-      error: (error, stackTrace) => Center(child: Text('Error: $error')), // Handle error case
+      loading: () => const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (error, stackTrace) {
+        debugPrint("Error: $error\nStackTrace: $stackTrace");
+        return MaterialApp(
+          home: Scaffold(
+            body: Center(child: Text('Error: $error')),
+          ),
+        );
+      },
     );
   }
 }
