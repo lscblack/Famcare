@@ -1,3 +1,4 @@
+import 'package:client/Pages/ProfilePage.dart';
 import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,16 +22,17 @@ class FamCare extends ConsumerWidget {
       data: (appState) {
         // Once the state is loaded, navigate accordingly
         return MaterialApp(
-          initialRoute: '/home',
+          initialRoute: '/profile',
           routes: {
             '/home': (context) => appState.isNewUser == true
                 ? Splashscreen1()
                 : Homepage(),
+                '/profile': (context) => ProfilePage(),
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()), // Show loading while waiting for data
-      error: (error, stackTrace) => Center(child: Text('Error: $error')), // Handle error case
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(child: Text('Error: $error')),
     );
   }
 }
