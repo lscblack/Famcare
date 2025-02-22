@@ -36,6 +36,7 @@ class ProfilePage extends StatelessWidget {
               const Spacer(),
             ],
           ),
+          const SizedBox(height: 0.0),
           Card(
             color: Colors.white,
             shape: RoundedRectangleBorder(
@@ -87,16 +88,114 @@ class ProfilePage extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 0.0),
           const ProfileCard(
             iconPath: "assets/fluent_book-exclamation-mark-20-filled.svg",
             title: 'Health History',
             description: "Check your All Medical History",
           ),
+          const SizedBox(height: 0.0),
           const ProfileCard(
             iconPath: "assets/mdi_account-child.svg",
             title: "Karekezi's History",
             description: "Receive and save up. Points to receive gifts",
           ),
+          Card(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(children: [
+                    Icon(
+                      Icons.settings,
+                      color: primaryGreen,
+                    ),
+                    const SizedBox(width: 12.0),
+                    Text(
+                      "Profile Settings",
+                      style: const TextStyle(
+                        color: Color(0xFF091F44),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ]),
+                  IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.chevron_right_rounded,
+                        color: primaryGreen,
+                      ))
+                ],
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(children: [
+                    Icon(
+                      Icons.lock_open_sharp,
+                      color: primaryGreen,
+                    ),
+                    const SizedBox(width: 12.0),
+                    Text(
+                      "Reset Password",
+                      style: const TextStyle(
+                        color: Color(0xFF091F44),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ]),
+                  IconButton(
+                      onPressed: () {},
+                      icon: Icon(
+                        Icons.chevron_right_rounded,
+                        color: primaryGreen,
+                      ))
+                ],
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(children: [
+                    Icon(
+                      Icons.door_front_door,
+                      color: primaryGreen,
+                    ),
+                    SizedBox(width: 12.0),
+                    Text(
+                      "Log Out",
+                      style: TextStyle(
+                        color: Color(0xFF091F44),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ])
+                ],
+              ),
+            ),
+          )
         ],
       ),
       bottomNavigationBar: const BottomBar(),

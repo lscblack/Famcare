@@ -51,7 +51,7 @@ class BottomBar extends StatelessWidget {
           ),
           // Positioned widget to make the "add box" icon above the others
           Positioned(
-            left: MediaQuery.of(context).size.width / 2 - 56 / 2, // Centering the icon horizontally
+            left: MediaQuery.of(context).size.width / 2 - 60 / 2, // Centering the icon horizontally
             bottom: 30, // Adjust how far above the row you want the icon
             child: InkedButton(
               route: bottomBarItems[2].route, // The route for the "add box" icon
