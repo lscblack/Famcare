@@ -18,7 +18,7 @@ class ProfilePage extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
+                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14.0),
                 ),
@@ -202,3 +202,4 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+
