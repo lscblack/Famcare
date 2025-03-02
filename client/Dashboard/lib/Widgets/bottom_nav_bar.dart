@@ -1,20 +1,38 @@
 import 'package:flutter/material.dart';
+import '../screens/calendar_screen.dart';
+import '../screens/dashboard_screen.dart';
+import '../screens/record_screen.dart';
+import '../screens/ChatScreen.dart';
 
-class BottomNavBar extends StatelessWidget {
-  final VoidCallback onHomePressed;
-  final VoidCallback onCalendarPressed;
-  final VoidCallback onRecordPressed;
-  final VoidCallback onChatPressed;
-  final VoidCallback onAddPressed;
+class BottomNavBar extends StatefulWidget {
+  const BottomNavBar({super.key, required Null Function() onChatPressed, required Null Function() onAddPressed, required int currentIndex, required Null Function() onHomePressed, required Null Function() onCalendarPressed, required Null Function() onRecordPressed});
 
-  const BottomNavBar({
-    super.key,
-    required this.onHomePressed,
-    required this.onCalendarPressed,
-    required this.onRecordPressed,
-    required this.onChatPressed,
-    required this.onAddPressed, required int currentIndex,
-  });
+  @override
+  _BottomNavBarState createState() => _BottomNavBarState();
+}
+
+class _BottomNavBarState extends State<BottomNavBar> {
+  int _selectedIndex = 0;
+
+  // List of pages to navigate
+  final List<Widget> _pages = [
+    DashboardScreen(),
+    CalendarScreen(),
+    RecordScreen(),
+    ChatScreen(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Navigate to the selected page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => _pages[index]),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +59,21 @@ class BottomNavBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home, onHomePressed),
-              _buildNavItem(Icons.calendar_month, onCalendarPressed),
-              const SizedBox(width: 60),
-              _buildNavItem(Icons.medical_services, onRecordPressed),
-              _buildNavItem(Icons.chat_outlined, onChatPressed),
+              _buildNavItem(Icons.home, 0),
+              _buildNavItem(Icons.calendar_month, 1),
+              const SizedBox(width: 60), // Space for the floating button
+              _buildNavItem(Icons.medical_services, 2),
+              _buildNavItem(Icons.chat_outlined, 3),
             ],
           ),
         ),
         Positioned(
           top: -28,
           child: FloatingActionButton(
-            onPressed: onAddPressed,
+            onPressed: () {
+              // Add button action here
+              print("Add button pressed");
+            },
             backgroundColor: const Color(0xFF3F8585),
             elevation: 8,
             shape: RoundedRectangleBorder(
@@ -65,10 +86,14 @@ class BottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, VoidCallback onTap) {
+  Widget _buildNavItem(IconData icon, int index) {
     return GestureDetector(
-      onTap: onTap,
-      child: Icon(icon, color: const Color(0xFF3F8585), size: 28),
+      onTap: () => _onItemTapped(index),
+      child: Icon(
+        icon,
+        color: _selectedIndex == index ? const Color(0xFF3F8585) : const Color(0xFF3F8585),
+        size: 28,
+      ),
     );
   }
 }
