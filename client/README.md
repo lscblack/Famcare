@@ -1,4 +1,3 @@
-
 ### Project Description:
 
 The **FamCare** app is a family health management platform designed to simplify the coordination of caregiving tasks, medication schedules, and health records. The app utilizes **Flutter** for the frontend, **FastAPI** for the backend, **Firebase** for authentication and database management, and **Machine Learning algorithms** for predictive features, ensuring a seamless user experience for family health management.

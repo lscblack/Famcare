@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Define the state model
+// App state model
 class AppState {
   final bool isNewUser;
-
-  AppState({required this.isNewUser});
-
-  // Copy with method for updating states
+  
+  AppState({this.isNewUser = true});
+  
+  // Copy with method for immutable updates
   AppState copyWith({bool? isNewUser}) {
     return AppState(
       isNewUser: isNewUser ?? this.isNewUser,
@@ -15,9 +15,9 @@ class AppState {
   }
 }
 
-// StateNotifier to manage state and persistence
+// App state notifier to update the state
 class AppStateNotifier extends StateNotifier<AppState> {
-  AppStateNotifier() : super(AppState(isNewUser: true)) {
+  AppStateNotifier() : super(AppState()) {
     _loadState(); // Load saved state when initialized
   }
 
@@ -25,27 +25,23 @@ class AppStateNotifier extends StateNotifier<AppState> {
   Future<void> _loadState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool isNewUser = prefs.getBool('isNewUser') ?? true;
-    
-    // Update the state with the loaded value
     state = AppState(isNewUser: isNewUser);
   }
-
-  // Update and persist `isNewUser` state
+  
+  // Update and persist isNewUser state
   Future<void> setNewUser(bool value) async {
     state = state.copyWith(isNewUser: value);
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isNewUser', value);
   }
-
-  void nextOnboardingPage() {}
 }
 
-// Riverpod provider for state management
-final appStateProvider = StateNotifierProvider<AppStateNotifier, AppState>(
-  (ref) => AppStateNotifier(),
-);
+// Provider for the app state
+final appStateProvider = StateNotifierProvider<AppStateNotifier, AppState>((ref) {
+  return AppStateNotifier();
+});
 
-// Optional: FutureProvider to access the initial state asynchronously
+// FutureProvider to access the initial state asynchronously
 final appStateFutureProvider = FutureProvider<AppState>((ref) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isNewUser = prefs.getBool('isNewUser') ?? true;

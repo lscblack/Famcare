@@ -1,5 +1,3 @@
-import 'package:client/Splash/Onboardingscreen.dart';
-import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:client/Pages/HomePage.dart';

@@ -5,8 +5,6 @@ class OnboardingPage extends StatelessWidget {
   final String title;
   final String description;
   final Color backgroundColor;
-  final double curveHeight;
-  final Alignment imageAlignment;
   final bool isLast;
   final VoidCallback? onGetStarted;
 
@@ -16,33 +14,35 @@ class OnboardingPage extends StatelessWidget {
     required this.title,
     required this.description,
     required this.backgroundColor,
-    this.curveHeight = 250,
-    this.imageAlignment = Alignment.center,
     this.isLast = false,
     this.onGetStarted,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    
     return Column(
       children: [
+        // Top section with curved bottom
         Stack(
           clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
+          alignment: Alignment.center,
           children: [
-            // Top curved section with logo
+            // Background color
             Container(
               width: double.infinity,
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: screenSize.height * 0.5,
               color: backgroundColor,
               child: Column(
                 children: [
-                  const SizedBox(height: 50),
+                  SizedBox(height: screenSize.height * 0.06),
+                  // FAM CARE logo at top
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.favorite, color: Colors.white),
-                      const SizedBox(width: 8),
+                      Icon(Icons.favorite, color: Colors.white),
+                      SizedBox(width: 8),
                       Text(
                         'FAM CARE',
                         style: TextStyle(
@@ -53,84 +53,109 @@ class OnboardingPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: 16),
+                  // Title
                   Text(
                     title,
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            // Bottom curve
+            
+            // Bottom curved section
             Positioned(
-              bottom: -50,
+              bottom: -1,
               left: 0,
               right: 0,
               child: ClipPath(
                 clipper: BottomCurveClipper(),
                 child: Container(
-                  height: curveHeight,
+                  height: 100,
                   color: Colors.white,
                 ),
               ),
             ),
-            // Image
+            
+            // Image positioned above curve
             Positioned(
-              bottom: 0,
+              bottom: 20, // Adjust to sit on the curve
               child: Image.asset(
                 imageAsset,
-                height: 300,
+                height: screenSize.height * 0.35, // Slightly larger for better visibility
                 fit: BoxFit.contain,
-                alignment: imageAlignment,
               ),
             ),
           ],
         ),
+        
+        // Bottom section with description and actions
         Expanded(
           child: Container(
-            padding: const EdgeInsets.all(30),
-            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            color: Colors.white,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                SizedBox(height: screenSize.height * 0.05),
+                // Description text
                 Text(
                   description,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Colors.grey[700],
+                    height: 1.4,
                   ),
                 ),
+                
                 if (isLast) ...[
-                  const SizedBox(height: 50),
+                  Spacer(),
+                  // Icons row for the last screen
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.support_agent, color: backgroundColor),
-                      Icon(Icons.car_rental, color: backgroundColor),
+                      Icon(
+                        Icons.medical_information_outlined, 
+                        color: backgroundColor,
+                        size: 28,
+                      ),
+                      SizedBox(width: screenSize.width * 0.2),
+                      Icon(
+                        Icons.local_hospital_outlined,
+                        color: backgroundColor,
+                        size: 28,
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 40),
-                  ElevatedButton(
-                    onPressed: onGetStarted,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: backgroundColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                  SizedBox(height: 30),
+                  // Get Started button
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: ElevatedButton(
+                      onPressed: onGetStarted,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF00A88E),
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Get Started',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                      child: Text(
+                        'Get Started',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
+                  SizedBox(height: 24),
                 ],
               ],
             ),
@@ -141,21 +166,27 @@ class OnboardingPage extends StatelessWidget {
   }
 }
 
-// Custom clipper for bottom curve
+// Improved bottom curve clipper to match the screenshots
 class BottomCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path();
-    path.moveTo(0, size.height);
-    path.lineTo(0, 50);
+    
+    // Start from the top-left corner
+    path.moveTo(0, 0);
+    path.lineTo(0, size.height * 0.5);
+    
+    // Create the curve that matches the screenshot
     path.quadraticBezierTo(
-      size.width / 2,
-      0,
-      size.width,
-      50,
+      size.width * 0.5, // Control point x - middle of screen
+      size.height * 1.5, // Control point y - deeper curve
+      size.width, // End point x - right side
+      size.height * 0.5, // End point y - same height as start
     );
-    path.lineTo(size.width, size.height);
-    path.close();
+    
+    // Complete the path
+    path.lineTo(size.width, 0);
+    
     return path;
   }
 
