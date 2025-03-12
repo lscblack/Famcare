@@ -1,4 +1,3 @@
-// ignore: file_names
 import 'package:flutter/material.dart';
 
 class Splash1curve extends StatefulWidget {
@@ -26,7 +25,7 @@ class _Splash1curveState extends State<Splash1curve> {
                 height:550,
                 child: Container(
                   alignment: Alignment.bottomCenter,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     color:
                         Color.fromARGB(255, 31, 172, 150), // Teal green color
                     borderRadius: BorderRadius.only(
@@ -43,11 +42,11 @@ class _Splash1curveState extends State<Splash1curve> {
             ],
           ),
 
-          const SizedBox(height: 200),
+          SizedBox(height: 200),
           // Fade-in animation
           TweenAnimationBuilder(
             tween: Tween<double>(begin: 0, end: 1),
-            duration: const Duration(seconds: 5),
+            duration: Duration(seconds: 5),
             builder: (_, double opacity, __) {
               return Opacity(
                 opacity: opacity,
@@ -89,11 +88,11 @@ class _Splash1curveState extends State<Splash1curve> {
               );
             },
           ),
-          const SizedBox(height: 50),
+          SizedBox(height: 50),
           //loading indicator
-          const Center(
+          Center(
             child: CircularProgressIndicator(
-              color: Color.fromARGB(255, 12, 172, 132),
+              color: const Color.fromARGB(255, 12, 172, 132),
             ),
           ),
         ],

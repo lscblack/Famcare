@@ -2,6 +2,7 @@ import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:client/Pages/HomePage.dart';
+import 'package:client/Splash/SplashScreen1.dart';
 import 'state_provider.dart'; // Import Riverpod state
 
 void main() {
@@ -20,12 +21,11 @@ class FamCare extends ConsumerWidget {
       data: (appState) {
         // Once the state is loaded, navigate accordingly
         return MaterialApp(
-          initialRoute: '/splash', // Set initial route to Splash1Curve
+          initialRoute: '/home',
           routes: {
-            '/splash': (context) => const Splash1curve(), // Add Splash1Curve route
             '/home': (context) => appState.isNewUser == true
-                ? const Splash1curve()
-                : const Homepage(),
+                ? Splashscreen1()
+                : Homepage(),
           },
         );
       },
