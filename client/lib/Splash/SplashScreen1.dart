@@ -1,5 +1,5 @@
 // ignore: file_names
-import 'package:client/Pages/HomePage.dart';
+import 'package:client/Splash/SplashScreen2.dart';
 import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,7 +22,7 @@ class Splashscreen1 extends ConsumerWidget {
     return AnimatedSplash(
       type: Transition.size,
       curve: Curves.easeOutCirc,
-      navigator: const Homepage(), // Navigate to Homepage
+      navigator: const Splashscreen2(), // Navigate to Homepage
       durationInSeconds: 5,
       child: Splash1curve(),
     );
