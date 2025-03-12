@@ -12,7 +12,7 @@ class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child:Text("Welcome to FamCare"),
       ),

@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:client/Pages/HomePage.dart';
 import 'package:client/Widgets/Splash1Curve.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +7,8 @@ import '../state_provider.dart'; // Import Riverpod provider
 import 'package:flutter_animated_splash/flutter_animated_splash.dart';
 
 class Splashscreen1 extends ConsumerWidget {
+  const Splashscreen1({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Use microtask to set state after build is complete
@@ -18,10 +21,10 @@ class Splashscreen1 extends ConsumerWidget {
 
     return AnimatedSplash(
       type: Transition.size,
-      child: Splash1curve(),
       curve: Curves.easeOutCirc,
-      navigator: Homepage(), // Navigate to Homepage
+      navigator: const Homepage(), // Navigate to Homepage
       durationInSeconds: 5,
+      child: Splash1curve(),
     );
   }
 }
