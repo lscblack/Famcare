@@ -13,7 +13,7 @@ class _HomepageState extends State<Homepage> {
 
     return Scaffold(
       body: Center(
-        child:Text("Welcome to FamCare"),
+        child: Text("Welcome to FamCare"),
       ),
     );
   }
