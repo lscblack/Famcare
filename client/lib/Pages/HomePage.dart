@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class Homepage extends StatefulWidget {
@@ -14,7 +13,7 @@ class _HomepageState extends State<Homepage> {
 
     return const Scaffold(
       body: Center(
-        child:Text("Welcome to FamCare"),
+        child: Text("Welcome to FamCare"),
       ),
     );
   }
