@@ -21,7 +21,7 @@ class BottomBar extends StatelessWidget {
       BottomBarItem(icon: Icons.search, route: '/search'),
       BottomBarItem(icon: Icons.add_box_rounded, route: '/notifications', size: 56),
       BottomBarItem(icon: Icons.calendar_month_rounded, route: '/schedule'),
-      BottomBarItem(icon: Icons.account_circle, route: '/account'),
+      BottomBarItem(icon: Icons.account_circle, route: '/profile'),
     ];
 
     return Container(

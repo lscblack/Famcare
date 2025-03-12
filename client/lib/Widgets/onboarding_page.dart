@@ -69,29 +69,9 @@ class OnboardingPage extends StatelessWidget {
                     // crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Logo and title row
-                      Row(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            logo, 
-                            width: 100, 
-                            height: 100,
-                            fit: BoxFit.cover,
-                            // color: Colors.blue,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 29,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      
+                      Image.asset("assets/logos/logo_white.png", height: 100),
+                      const SizedBox(height: 10),
+  
                       // Subtitle
                       const SizedBox(height: 10),
                       SizedBox(

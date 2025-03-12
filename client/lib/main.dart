@@ -22,13 +22,14 @@ class FamCare extends ConsumerWidget {
       data: (appState) {
         // Once the state is loaded, navigate accordingly
         return MaterialApp(
-          initialRoute: '/home',
+          initialRoute: '/profile',
           routes: {
             '/': (context) => Homepage(),
             '/home': (context) => appState.isNewUser == false 
                 ? Splashscreen1()
                 : Homepage(),
                 '/profile': (context) => ProfilePage(),
+                // '/reset': (context) => reset_screen(),
           },
         );
       },
