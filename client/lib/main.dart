@@ -1,5 +1,7 @@
 
+import 'package:client/Pages/LoginScreen.dart';
 import 'package:client/Pages/ProfilePage.dart';
+import 'package:client/Pages/RegisterScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:client/Pages/HomePage.dart';
@@ -22,7 +24,7 @@ class FamCare extends ConsumerWidget {
       data: (appState) {
         // Once the state is loaded, navigate accordingly
         return MaterialApp(
-          initialRoute: '/profile',
+          initialRoute: '/signup',
           routes: {
             '/': (context) => Homepage(),
             '/home': (context) => appState.isNewUser == false 
@@ -30,6 +32,9 @@ class FamCare extends ConsumerWidget {
                 : Homepage(),
                 '/profile': (context) => ProfilePage(),
                 // '/reset': (context) => reset_screen(),
+                '/signup': (context) => RegisterScreen(),
+                '/login': (context) => LoginScreen(),
+
           },
         );
       },
