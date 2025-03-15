@@ -1,7 +1,10 @@
-
 import 'package:client/Pages/LoginScreen.dart';
 import 'package:client/Pages/ProfilePage.dart';
 import 'package:client/Pages/RegisterScreen.dart';
+import 'package:client/screens/ChatScreen.dart';
+import 'package:client/screens/calendar_screen.dart';
+import 'package:client/screens/dashboard_screen.dart';
+import 'package:client/screens/record_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:client/Pages/HomePage.dart';
@@ -24,17 +27,19 @@ class FamCare extends ConsumerWidget {
       data: (appState) {
         // Once the state is loaded, navigate accordingly
         return MaterialApp(
-          initialRoute: '/signup',
+          initialRoute: '/dashboard',
           routes: {
             '/': (context) => Homepage(),
-            '/home': (context) => appState.isNewUser == false 
-                ? Splashscreen1()
-                : Homepage(),
-                '/profile': (context) => ProfilePage(),
-                // '/reset': (context) => reset_screen(),
-                '/signup': (context) => RegisterScreen(),
-                '/login': (context) => LoginScreen(),
-
+            '/home': (context) =>
+                appState.isNewUser ? Splashscreen1() : Homepage(),
+            '/profile': (context) => ProfilePage(),
+            // '/reset': (context) => reset_screen(),
+            '/signup': (context) => RegisterScreen(),
+            '/login': (context) => LoginScreen(),
+            '/calendar': (context) => CalendarScreen(),
+            '/chat': (context) => ChatScreen(),
+            '/dashboard': (context) => DashboardScreen(),
+            '/record': (context) => RecordScreen(),
           },
         );
       },
