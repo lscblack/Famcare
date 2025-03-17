@@ -4,7 +4,7 @@ class InkedButton extends StatelessWidget {
   final Widget child;
   final String route;
 
-  const InkedButton({Key? key, required this.child, required this.route}) : super(key: key);
+  const InkedButton({super.key, required this.child, required this.route});
 
   @override
   Widget build(BuildContext context) {

@@ -49,7 +49,7 @@ class _Splashscreen2State extends State<Splashscreen2> {
               hasGetStartedButton: true,
               backgroundColor: tealColor,
               onGetStarted: () {
-                Navigator.pushNamed(context, '/');
+                Navigator.pushNamed(context, '/login');
               },
             ),
           ],
@@ -57,7 +57,7 @@ class _Splashscreen2State extends State<Splashscreen2> {
           inactiveDotColor: tealColor.withOpacity(0.3),
           onComplete: () {
             // For example:
-            Navigator.pushNamed(context, '/');
+            Navigator.pushNamed(context, '/login');
           },
         ),
       );

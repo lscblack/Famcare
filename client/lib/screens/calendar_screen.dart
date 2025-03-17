@@ -1,59 +1,59 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:client/Widgets/bottom_nav_bar.dart';
 import 'package:client/Widgets/calendar_grid.dart';
 import 'package:client/Widgets/medication_item.dart';
-import 'package:client/providers/calendar_providers.dart';
+import '../providers/calendar_providers.dart'; // Assuming this file contains MedicationBloc
 
-class CalendarScreen extends ConsumerWidget {
+class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final focusedDate = ref.watch(focusedDateProvider);
-    
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _buildCalendar(context, ref, focusedDate),
-                    _buildLegend(focusedDate),
-                    _buildMedicationList(ref, focusedDate),
-                  ],
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => MedicationBloc(), // Use MedicationBloc instead of CalendarBloc
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: BlocBuilder<MedicationBloc, MedicationState>(
+                    builder: (context, state) {
+                      return Column(
+                        children: [
+                          _buildCalendar(context, state.focusedDate),
+                          _buildLegend(state.focusedDate),
+                          _buildMedicationList(context, state),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            BottomNavBar(
-              onHomePressed: () {
-                // Implement action for home button
-                print('Home Pressed');
-              },
-              onCalendarPressed: () {
-                // Implement action for calendar button
-                print('Calendar Pressed');
-              },
-              onRecordPressed: () {
-                // Implement action for record button
-                print('Record Pressed');
-              },
-              onChatPressed: () {
-                // Implement action for chat button
-                print('Chat Pressed');
-              },
-              onAddPressed: () {
-                // Implement action for add button
-                print('FAB Pressed');
-              },
-              currentIndex: 1, // Current screen index for calendar
-            ),
-          ],
+              BottomNavBar(
+                onHomePressed: () {
+                  print('Home Pressed');
+                },
+                onCalendarPressed: () {
+                  print('Calendar Pressed');
+                },
+                onRecordPressed: () {
+                  print('Record Pressed');
+                },
+                onChatPressed: () {
+                  print('Chat Pressed');
+                },
+                onAddPressed: () {
+                  print('FAB Pressed');
+                },
+                currentIndex: 1, // Current screen index for calendar
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -62,11 +62,19 @@ class CalendarScreen extends ConsumerWidget {
   Widget _buildHeader() {
     return const Padding(
       padding: EdgeInsets.all(16),
-      child: Text('Calendar', style: TextStyle(color: Color(0xFF37B5B6), fontSize: 24, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
+      child: Text(
+        'Calendar',
+        style: TextStyle(
+          color: Color(0xFF37B5B6),
+          fontSize: 24,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
-  Widget _buildCalendar(BuildContext context, WidgetRef ref, DateTime focusedDate) {
+  Widget _buildCalendar(BuildContext context, DateTime focusedDate) {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -77,7 +85,7 @@ class CalendarScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          _buildDateSelector(context, ref, focusedDate),
+          _buildDateSelector(context, focusedDate),
           const SizedBox(height: 20),
           CalendarGrid(focusedDate: focusedDate),
         ],
@@ -85,12 +93,12 @@ class CalendarScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDateSelector(BuildContext context, WidgetRef ref, DateTime focusedDate) {
+  Widget _buildDateSelector(BuildContext context, DateTime focusedDate) {
     return Row(
       children: [
         Expanded(
           child: InkWell(
-            onTap: () => _selectDate(context, ref),
+            onTap: () => _selectDate(context), // Pass context here
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
@@ -112,10 +120,10 @@ class CalendarScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _selectDate(BuildContext context, WidgetRef ref) async {
+  Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: ref.read(focusedDateProvider),
+      initialDate: context.read<MedicationBloc>().state.focusedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (context, child) {
@@ -127,9 +135,9 @@ class CalendarScreen extends ConsumerWidget {
         );
       },
     );
-    
+
     if (picked != null) {
-      ref.read(focusedDateProvider.notifier).state = picked;
+      context.read<MedicationBloc>().add(ChangeFocusedDate(picked));
     }
   }
 
@@ -158,30 +166,28 @@ class CalendarScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMedicationList(WidgetRef ref, DateTime focusedDate) {
-    final medStatuses = ref.watch(medicationStatusProvider);
-    
+  Widget _buildMedicationList(BuildContext context, MedicationState state) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(DateFormat('MMMM').format(focusedDate), 
-               style: const TextStyle(color: Color(0xFF37B5B6), fontSize: 20, fontWeight: FontWeight.w600)),
+          Text(DateFormat('MMMM').format(state.focusedDate),
+              style: const TextStyle(color: Color(0xFF37B5B6), fontSize: 20, fontWeight: FontWeight.w600)),
           const Text('You have to take 2 medicines', style: TextStyle(color: Colors.grey, fontSize: 14)),
           const SizedBox(height: 16),
           MedicationItem(
-            title: 'Aspirin 500 mg | 1 piece', 
-            details: '6:00 AM | ${DateFormat('E, dd').format(focusedDate)} | Before food', 
-            isCompleted: medStatuses['morning'] ?? false,
-            onToggle: () => ref.read(medicationStatusProvider.notifier).toggleStatus('morning'),
+            title: 'Aspirin 500 mg | 1 piece',
+            details: '6:00 AM | ${DateFormat('E, dd').format(state.focusedDate)} | Before food',
+            isCompleted: state.medicationStatuses['morning'] ?? false,
+            onToggle: () => context.read<MedicationBloc>().add(ToggleMedicationStatus('morning')),
           ),
           const SizedBox(height: 12),
           MedicationItem(
-            title: 'Aspirin 500 mg | 1 pair', 
-            details: '10:00 PM | ${DateFormat('E, dd').format(focusedDate)} | Before food', 
-            isCompleted: medStatuses['night'] ?? false,
-            onToggle: () => ref.read(medicationStatusProvider.notifier).toggleStatus('night'),
+            title: 'Aspirin 500 mg | 1 pair',
+            details: '10:00 PM | ${DateFormat('E, dd').format(state.focusedDate)} | Before food',
+            isCompleted: state.medicationStatuses['night'] ?? false,
+            onToggle: () => context.read<MedicationBloc>().add(ToggleMedicationStatus('night')),
           ),
         ],
       ),

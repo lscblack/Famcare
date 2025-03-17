@@ -1,15 +1,48 @@
+
+import '../providers/state_provider.dart';
+import 'package:client/screens/LoginScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardHeader extends StatelessWidget {
-  const DashboardHeader({super.key});
+  final String userName;
+
+  const DashboardHeader({super.key, required this.userName});
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      // Sign out from Firebase
+      await FirebaseAuth.instance.signOut();
+
+      // Remove the current user from the state using the AppBloc
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId != null) {
+        context.read<AppBloc>().add(RemoveUser(userId));
+      }
+      // Clear user data from SharedPreferences (if needed)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      // Navigate to the LoginScreen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    } catch (e) {
+      // Handle any errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logout failed. Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      scrollDirection: Axis.vertical, // Enable vertical scrolling
+      scrollDirection: Axis.vertical,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(  // Change Row to Column for better vertical scrolling
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -34,7 +67,7 @@ class DashboardHeader extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Karekezi',
+                          userName,
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -46,36 +79,21 @@ class DashboardHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                Stack(
-                  children: [
-                    ClipRRect(
+                GestureDetector(
+                  onTap: () => _logout(context),
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.teal,
                       borderRadius: BorderRadius.circular(15),
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Image.asset(
-                          'assets/profile.jpg',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
                     ),
-                    Positioned(
-                      top: 1,
-                      right: 1,
-                      child: Container(
-                        width: 11,
-                        height: 11,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.red, width: 2),
-                        ),
-                      ),
+                    child: Icon(
+                      Icons.logout,
+                      color: Colors.white,
+                      size: 30,
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),

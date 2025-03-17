@@ -1,50 +1,51 @@
-import 'package:client/Pages/LoginScreen.dart';
-import 'package:client/Pages/ProfilePage.dart';
-import 'package:client/Pages/RegisterScreen.dart';
-import 'package:client/screens/ChatScreen.dart';
-import 'package:client/screens/calendar_screen.dart';
-import 'package:client/screens/dashboard_screen.dart';
-import 'package:client/screens/record_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:client/Pages/HomePage.dart';
 import 'package:client/Splash/SplashScreen1.dart';
-import 'state_provider.dart'; // Import Riverpod state
+import 'package:client/screens/dashboard_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:client/providers/state_provider.dart';
+import 'package:client/screens/ProfilePage.dart';
+import 'package:client/screens/RegisterScreen.dart';
+import 'package:client/screens/LoginScreen.dart';
+import 'package:client/screens/calendar_screen.dart';
+import 'package:client/screens/ChatScreen.dart';
+import 'package:client/screens/record_screen.dart';
+import 'firebase_options.dart';
 
-void main() {
-  runApp(const ProviderScope(child: FamCare())); // Wrap in ProviderScope
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  runApp(
+    BlocProvider(
+      create: (context) => AppBloc(), //
+      child: const FamCare(),
+    ),
+  );
 }
 
-class FamCare extends ConsumerWidget {
+class FamCare extends StatelessWidget {
   const FamCare({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the FutureProvider to load the app state
-    final appStateAsync = ref.watch(appStateFutureProvider);
-
-    return appStateAsync.when(
-      data: (appState) {
-        // Once the state is loaded, navigate accordingly
+  Widget build(BuildContext context) {
+    return BlocBuilder<AppBloc, AppState>(
+      builder: (context, state) {
         return MaterialApp(
-          initialRoute: '/dashboard',
+          debugShowCheckedModeBanner: false,
+          initialRoute: '/',
           routes: {
-            '/': (context) => Homepage(),
-            '/home': (context) =>
-                appState.isNewUser ? Splashscreen1() : Homepage(),
+            '/': (context) => Splashscreen1(),
+            '/home': (context) => DashboardScreen(),
             '/profile': (context) => ProfilePage(),
-            // '/reset': (context) => reset_screen(),
-            '/signup': (context) => RegisterScreen(),
+            '/register': (context) => RegisterScreen(),
             '/login': (context) => LoginScreen(),
             '/calendar': (context) => CalendarScreen(),
             '/chat': (context) => ChatScreen(),
-            '/dashboard': (context) => DashboardScreen(),
             '/record': (context) => RecordScreen(),
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text('Error: $error')),
     );
   }
 }

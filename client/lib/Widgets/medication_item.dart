@@ -7,12 +7,12 @@ class MedicationItem extends StatelessWidget {
   final VoidCallback onToggle;
 
   const MedicationItem({
-    Key? key, 
+    super.key, 
     required this.title, 
     required this.details, 
     required this.isCompleted,
     required this.onToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
