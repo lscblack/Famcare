@@ -32,13 +32,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             children: [
               // Dashboard Header with User Info and Profile Navigation Button
-              BlocBuilder<AppBloc, AppState>(
+              BlocBuilder<AppCubit, AppState>(
                 builder: (context, state) {
-                  // Access the user info from the AppBloc state
+                  // Access the user info from the AppCubit state
                   final userInfo =
-                      state.users.isNotEmpty ? state.users.first : null;
+                      state is AppAuthenticated ? state.user : null;
+
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

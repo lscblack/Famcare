@@ -1,3 +1,4 @@
+import 'package:client/globals.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,6 +18,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: primaryBg,
       appBar: AppBar(title: Text('Chat')),
       body: Column(
         children: [

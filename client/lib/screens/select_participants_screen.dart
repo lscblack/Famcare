@@ -1,4 +1,5 @@
 import 'package:client/Widgets/bottom_nav_bar.dart';
+import 'package:client/globals.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,7 +9,8 @@ import 'record_screen.dart';
 
 class SelectParticipantsScreen extends StatefulWidget {
   @override
-  _SelectParticipantsScreenState createState() => _SelectParticipantsScreenState();
+  _SelectParticipantsScreenState createState() =>
+      _SelectParticipantsScreenState();
 }
 
 class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
@@ -32,11 +34,12 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
           .collection('users')
           .doc(_currentUserId)
           .get();
-          
+
       final families = List<String>.from(userDoc['families'] ?? []);
       if (families.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You need to belong to a family to start a chat')),
+          SnackBar(
+              content: Text('You need to belong to a family to start a chat')),
         );
         Navigator.pop(context);
         return;
@@ -48,14 +51,18 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
           .collection('families')
           .doc(_familyId)
           .get();
-          
+
       List<String> memberIds = List<String>.from(familyDoc['members'] ?? []);
-      memberIds.removeWhere((id) => id == _currentUserId); // Exclude current user
+      memberIds
+          .removeWhere((id) => id == _currentUserId); // Exclude current user
 
       // Fetch member details
       _familyMembers = await Future.wait(
         memberIds.map((id) async {
-          final doc = await FirebaseFirestore.instance.collection('users').doc(id).get();
+          final doc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(id)
+              .get();
           return User.fromMap(doc.data()!);
         }),
       );
@@ -77,7 +84,7 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
     }
 
     final participants = [_currentUserId, ..._selectedUserIds]..sort();
-    
+
     try {
       // Check existing chats
       final chatsQuery = await FirebaseFirestore.instance
@@ -88,7 +95,8 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
       Chat? existingChat;
       for (var chatDoc in chatsQuery.docs) {
-        final chatParticipants = List<String>.from(chatDoc['participants'] ?? [])..sort();
+        final chatParticipants =
+            List<String>.from(chatDoc['participants'] ?? [])..sort();
         if (chatParticipants.length == participants.length &&
             const ListEquality().equals(chatParticipants, participants)) {
           existingChat = Chat.fromMap(chatDoc.data(), chatDoc.id);
@@ -98,15 +106,18 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
       if (existingChat != null) {
         Navigator.pop(context);
-        Navigator.push(context, MaterialPageRoute(
-          builder: (context) => ChatScreen(chatId: existingChat!.id),
-        ));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatScreen(chatId: existingChat!.id),
+            ));
         return;
       }
 
       // Create new chat
       final chatName = await _generateChatName(participants);
-      final newChatRef = await FirebaseFirestore.instance.collection('chats').add({
+      final newChatRef =
+          await FirebaseFirestore.instance.collection('chats').add({
         'familyId': _familyId,
         'participants': participants,
         'name': chatName,
@@ -116,9 +127,11 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
       // Navigate to new chat
       Navigator.pop(context);
-      Navigator.push(context, MaterialPageRoute(
-        builder: (context) => ChatScreen(chatId: newChatRef.id),
-      ));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatScreen(chatId: newChatRef.id),
+          ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error creating chat: $e')),
@@ -129,14 +142,17 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
   Future<String> _generateChatName(List<String> participants) async {
     if (participants.length == 2) {
       final otherUserId = participants.firstWhere((id) => id != _currentUserId);
-      final doc = await FirebaseFirestore.instance.collection('users').doc(otherUserId).get();
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(otherUserId)
+          .get();
       return doc['fullName'];
     }
-    
-    final otherUserIds = participants.where((id) => id != _currentUserId).toList();
-    final userDocs = await Future.wait(
-      otherUserIds.map((id) => FirebaseFirestore.instance.collection('users').doc(id).get())
-    );
+
+    final otherUserIds =
+        participants.where((id) => id != _currentUserId).toList();
+    final userDocs = await Future.wait(otherUserIds.map(
+        (id) => FirebaseFirestore.instance.collection('users').doc(id).get()));
     final names = userDocs.map((doc) => doc['fullName'] as String).toList();
     return 'Group: ${names.join(', ')}';
   }
@@ -144,6 +160,7 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: primaryBg,
       appBar: AppBar(
         title: Text('New Chat'),
         actions: [
@@ -155,25 +172,27 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: _familyMembers.length,
-              itemBuilder: (context, index) {
-                final member = _familyMembers[index];
-                return CheckboxListTile(
-                  title: Text(member.fullName),
-                  value: _selectedUserIds.contains(member.id),
-                  onChanged: (bool? value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedUserIds.add(member.id);
-                      } else {
-                        _selectedUserIds.remove(member.id);
-                      }
-                    });
+          : _familyMembers.isEmpty
+              ? Center(child: Text("No family members found"))
+              : ListView.builder(
+                  itemCount: _familyMembers.length,
+                  itemBuilder: (context, index) {
+                    final member = _familyMembers[index];
+                    return CheckboxListTile(
+                      title: Text(member.fullName),
+                      value: _selectedUserIds.contains(member.id),
+                      onChanged: (bool? value) {
+                        setState(() {
+                          if (value == true) {
+                            _selectedUserIds.add(member.id);
+                          } else {
+                            _selectedUserIds.remove(member.id);
+                          }
+                        });
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
     );
   }
 }

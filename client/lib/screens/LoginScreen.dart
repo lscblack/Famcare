@@ -42,8 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -67,14 +67,14 @@ class _LoginScreenState extends State<LoginScreen> {
             setState(() {
               _emailVerified = true;
             });
-            await _sendOtp(phoneNumber);
+            // await _sendOtp(phoneNumber);
+            await _navigateToDashboard(userCredential.user!);
           } else {
             await _navigateToDashboard(userCredential.user!);
           }
         } else {
           await _navigateToDashboard(userCredential.user!);
         }
-
       } on FirebaseAuthException catch (e) {
         String message = "An error occurred";
         if (e.code == 'user-not-found') {
@@ -270,72 +270,85 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildEmailPasswordForm() {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Email TextFormField
         TextFormField(
-        controller: _emailController,
-        decoration: InputDecoration(
-        labelText: 'Email',
-        border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8.0),
-    prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF48B1A5)),
-    keyboardType: TextInputType.emailAddress,
-    validator: (value) {
-    if (value == null || value.isEmpty) return 'Please enter your email';
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-    return 'Please enter a valid email';
-    }
-    return null;
-    },
-    ),
+          controller: _emailController,
+          decoration: InputDecoration(
+            labelText: 'Email',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+            prefixIcon:
+                const Icon(Icons.email_outlined, color: Color(0xFF48B1A5)),
+          ),
+          keyboardType: TextInputType.emailAddress,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your email';
+            }
+            // Improved email regex for better validation
+            if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+                .hasMatch(value)) {
+              return 'Please enter a valid email';
+            }
+            return null;
+          },
+        ),
 
-    const SizedBox(height: 20),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+            prefixIcon:
+                const Icon(Icons.lock_outline, color: Color(0xFF48B1A5)),
+            suffixIcon: IconButton(
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: const Color(0xFF48B1A5)),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty)
+              return 'Please enter your password';
+            if (value.length < 8)
+              return 'Password must be at least 8 characters';
+            return null;
+          },
+        ),
 
-    TextFormField(
-    controller: _passwordController,
-    obscureText: _obscurePassword,
-    decoration: InputDecoration(
-    labelText: 'Password',
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.0)),
-    prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF48B1A5)),
-    suffixIcon: IconButton(
-    icon: Icon(
-    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-    color: const Color(0xFF48B1A5)),
-    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-    ),
-    ),
-    validator: (value) {
-    if (value == null || value.isEmpty) return 'Please enter your password';
-    if (value.length < 8) return 'Password must be at least 8 characters';
-    return null;
-    },
-    ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _handleForgotPassword,
+            child: const Text('Forgot Password?',
+                style: TextStyle(color: Color(0xFF48B1A5))),
+          ),
+        ),
 
-    Align(
-    alignment: Alignment.centerRight,
-    child: TextButton(
-    onPressed: _handleForgotPassword,
-    child: const Text('Forgot Password?', style: TextStyle(color: Color(0xFF48B1A5))),
-    ),
-    ),
+        const SizedBox(height: 30),
 
-    const SizedBox(height: 30),
-
-    ElevatedButton(
-    onPressed: _isLoading ? null : _verifyEmailPassword,
-    style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF48B1A5),
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(30.0)),
-    ),
-    child: _isLoading
-    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-        : const Text('Sign in', style: TextStyle(fontSize: 18)),
-    ),
-    ],
+        ElevatedButton(
+          onPressed: _isLoading ? null : _verifyEmailPassword,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF48B1A5),
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+          ),
+          child: _isLoading
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+              : const Text('Sign in', style: TextStyle(fontSize: 18)),
+        ),
+      ],
     );
   }
 
@@ -343,54 +356,53 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-    Text(
-    'Enter the OTP sent to ${_phoneController.text}',
-      style: const TextStyle(fontSize: 16),
-      textAlign: TextAlign.center,
-    ),
-
-    const SizedBox(height: 20),
-
-    TextFormField(
-    controller: _otpController,
-    decoration: InputDecoration(
-    labelText: 'OTP',
-    border: OutlineInputBorder(
-    borderRadius: BorderRadius.circular(8.0)),
-    prefixIcon: const Icon(Icons.sms_outlined, color: Color(0xFF48B1A5)),
-    ),
-    keyboardType: TextInputType.number,
-    validator: (value) {
-    if (value == null || value.isEmpty) return 'Please enter the OTP';
-    if (value.length != 6) return 'OTP must be 6 digits';
-    return null;
-    },
-    ),
-
-    const SizedBox(height: 20),
-
-    Align(
-    alignment: Alignment.centerRight,
-    child: TextButton(
-    onPressed: _isLoading ? null : () => _sendOtp(_phoneController.text),
-    child: const Text('Resend OTP', style: TextStyle(color: Color(0xFF48B1A5))),
-    ),
-
-    const SizedBox(height: 30),
-
-    ElevatedButton(
-    onPressed: _isLoading ? null : () => _verifyOtp(_otpController.text),
-    style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF48B1A5),
-    padding: const EdgeInsets.symmetric(vertical: 15),
-    shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(30.0)),
-    ),
-    child: _isLoading
-    ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-        : const Text('Verify OTP', style: TextStyle(fontSize: 18)),
-    ),
-    ],
+        Text(
+          'Enter the OTP sent to ${_phoneController.text}',
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: _otpController,
+          decoration: InputDecoration(
+            labelText: 'OTP',
+            border:
+                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
+            prefixIcon:
+                const Icon(Icons.sms_outlined, color: Color(0xFF48B1A5)),
+          ),
+          keyboardType: TextInputType.number,
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Please enter the OTP';
+            if (value.length != 6) return 'OTP must be 6 digits';
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed:
+                _isLoading ? null : () => _sendOtp(_phoneController.text),
+            child: const Text('Resend OTP',
+                style: TextStyle(color: Color(0xFF48B1A5))),
+          ),
+        ),
+        const SizedBox(height: 30),
+        ElevatedButton(
+          onPressed: _isLoading ? null : () => _verifyOtp(_otpController.text),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF48B1A5),
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0)),
+          ),
+          child: _isLoading
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+              : const Text('Verify OTP', style: TextStyle(fontSize: 18)),
+        ),
+      ],
     );
   }
 
@@ -425,16 +437,23 @@ class _LoginScreenState extends State<LoginScreen> {
             top: 210,
             child: Column(
               children: [
-                const Text('FAM CARE', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-                const Text('we love and care', style: TextStyle(color: Colors.white, fontSize: 16)),
+                const Text('FAM CARE',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold)),
+                const Text('we love and care',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),
           Positioned(
             bottom: -30,
-            child: Text(
-                'Stay Healthy, Stay Inspired!',
-                style: TextStyle(color: const Color(0xFF48B1A5), fontSize: 20, fontWeight: FontWeight.w500)),
+            child: Text('Stay Healthy, Stay Inspired!',
+                style: TextStyle(
+                    color: const Color(0xFF48B1A5),
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500)),
           ),
         ],
       ),
@@ -463,6 +482,36 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (_emailVerified && !_otpSent)
                       const Center(child: CircularProgressIndicator()),
                     if (_otpSent) _buildOtpVerificationForm(),
+                    // Sign up text
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Don\'t have an account ? ',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // Navigate to sign up
+                            Navigator.pushNamed(context, '/register');
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(50, 30),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Signup',
+                            style: TextStyle(
+                              color: Color(0xFF48B1A5),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -475,18 +524,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleForgotPassword() async {
     if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter your email first'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Please enter your email first'),
+          backgroundColor: Colors.red));
       return;
     }
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Password reset email sent'), backgroundColor: Colors.green));
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: _emailController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Password reset email sent'),
+          backgroundColor: Colors.green));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send reset email: ${e.toString()}'), backgroundColor: Colors.red));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to send reset email: ${e.toString()}'),
+          backgroundColor: Colors.red));
     }
   }
 }
