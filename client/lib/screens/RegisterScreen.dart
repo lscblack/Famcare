@@ -1,4 +1,5 @@
 import 'package:client/screens/LoginScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,11 +13,13 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // Controllers
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _phoneController = TextEditingController(); // Added phone controller
 
   // Form keys for validation
   final _step1FormKey = GlobalKey<FormState>();
@@ -34,6 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _phoneController.dispose(); // Dispose phone controller
     super.dispose();
   }
 
@@ -65,23 +69,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text.trim(),
         );
 
-        // Update user profile
+        // Update user profile with phone number
         await userCredential.user!.updateDisplayName(_fullNameController.text.trim());
 
-        // // Create a UserInfo object
-        // final userInfo = UserInfo_Fam(
-        //   id: userCredential.user!.uid,
-        //   name: _fullNameController.text.trim(),
-        //   email: _emailController.text.trim(),
-        // );
-        //
-        // // Dispatch the AddUser event to save the user in the AppBloc
-        // context.read<AppBloc>().add(AddUser(userInfo));
+        // ✅ Save user data to Firestore
+        if (userCredential.user == null) {
+          throw Exception("User is null, cannot save to Firestore.");
+        }
 
-        // Navigate to another screen on success
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoginScreen()), // Change this to your next screen
-        );
+        try {
+          DocumentReference docRef = _firestore.collection('users').doc(userCredential.user!.uid);
+
+          await docRef.set({
+            'fullName': _fullNameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'phone': _phoneController.text.trim(), // Added phone to Firestore
+            'role': 'primary_caregiver',
+            'profileImageUrl': '',
+            'languagePreference': 'en',
+            'notificationPreferences': {
+              'medicationReminders': true,
+              'taskAlerts': false,
+            },
+            'createdAt': FieldValue.serverTimestamp(),
+            'families': [],
+          });
+
+          print("User data successfully saved to Firestore");
+          // Navigate to another screen on success
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => LoginScreen()), // Change this to your next screen
+          );
+        } on FirebaseException catch (e) {
+          print("Firestore error: ${e.message}");
+          throw Exception('Failed to save user data: ${e.message}');
+        } catch (e) {
+          print("Unexpected error: $e");
+          throw Exception('Failed to save user data: $e');
+        }
+
       } on FirebaseAuthException catch (e) {
         String message = "An error occurred";
         if (e.code == 'email-already-in-use') {
@@ -106,7 +132,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
-
           ),
         );
       } finally {
@@ -326,6 +351,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ).hasMatch(value);
                 if (!emailValid) {
                   return 'Please enter a valid email';
+                }
+                return null;
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            // Phone number field (added)
+            TextFormField(
+              controller: _phoneController,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                prefixIcon: const Icon(
+                  Icons.phone_outlined,
+                  color: Color(0xFF48B1A5),
+                ),
+              ),
+              keyboardType: TextInputType.phone,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your phone number';
+                }
+                // Simple phone validation
+                bool phoneValid = RegExp(r'^[0-9]{10,15}$').hasMatch(value);
+                if (!phoneValid) {
+                  return 'Please enter a valid phone number';
                 }
                 return null;
               },

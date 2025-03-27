@@ -11,49 +11,62 @@ import '../Widgets/reminders_section.dart';
 import '../Widgets/bottom_nav_bar.dart';
 import '../providers/state_provider.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    int currentIndex = 0; // You can change the value based on your logic
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5FF),
       body: SafeArea(
-        child: SingleChildScrollView(
-          // Wrap the entire Column in SingleChildScrollView
-          child: Column(
-            children: [
-              // Dashboard Header with User Info
-              BlocBuilder<AppBloc, AppState>(
-                builder: (context, state) {
-                  // Access the user info from the AppBloc state
-                  final userInfo = state.users.isNotEmpty ? state.users.first : null;
-                  return DashboardHeader(userName: userInfo?.name ?? 'Guest'); // Pass userName
-                },
+        child: BlocBuilder<AppCubit, AppState>(
+          builder: (context, state) {
+            if (state is AppLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final currentUser = state is AppAuthenticated ? state.user : null;
+
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  DashboardHeader(
+                    userName: currentUser?.name ?? 'Guest',
+                    userEmail: currentUser?.email,
+                  ),
+                  const SearchBarWidget(),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: const [
+                        ServicesSection(),
+                        SizedBox(height: 24),
+                        PlanSection(),
+                        SizedBox(height: 24),
+                        RemindersSection(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SearchBarWidget(),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    ServicesSection(),
-                    SizedBox(height: 24),
-                    PlanSection(),
-                    SizedBox(height: 24),
-                    RemindersSection(),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
       bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
         onHomePressed: () {
-          print("Home Pressed");
+          setState(() {
+            _currentIndex = 0;
+          });
         },
         onCalendarPressed: () {
           Navigator.push(
@@ -76,7 +89,6 @@ class DashboardScreen extends StatelessWidget {
         onAddPressed: () {
           print('FAB Clicked');
         },
-        currentIndex: currentIndex, // Pass currentIndex
       ),
     );
   }
