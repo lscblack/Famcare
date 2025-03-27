@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:client/providers/state_provider.dart';
-import 'package:client/screens/ProfilePage.dart';
+import 'package:client/screens/profile_page.dart';
 import 'package:client/screens/RegisterScreen.dart';
 import 'package:client/screens/LoginScreen.dart';
 import 'package:client/screens/calendar_screen.dart';
-import 'package:client/screens/ChatScreen.dart';
+import 'package:client/screens/chat_list_screen.dart';
 import 'package:client/screens/record_screen.dart';
 import 'firebase_options.dart';
 
@@ -41,7 +41,7 @@ class FamCare extends StatelessWidget {
             '/register': (context) => RegisterScreen(),
             '/login': (context) => LoginScreen(),
             '/calendar': (context) => CalendarScreen(),
-            '/chat': (context) => ChatScreen(),
+            '/chat': (context) => ChatListScreen(),
             '/record': (context) => RecordScreen(),
           },
         );

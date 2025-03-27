@@ -4,7 +4,7 @@ import '../Widgets/bottom_nav_bar.dart';
 import 'dashboard_screen.dart';
 import 'calendar_screen.dart';
 import 'record_screen.dart';
-import 'ChatScreen.dart';
+import 'chat_list_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyScreen extends StatelessWidget {
@@ -211,7 +211,7 @@ class EmergencyScreen extends StatelessWidget {
                 onChatPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => ChatScreen()),
+                    MaterialPageRoute(builder: (context) => ChatListScreen()),
                   );
                 },
                 onAddPressed: () {
