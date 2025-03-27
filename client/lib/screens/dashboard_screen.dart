@@ -12,13 +12,18 @@ import '../Widgets/bottom_nav_bar.dart';
 import '../providers/state_provider.dart';
 import 'profile_page.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    int currentIndex = 0; // You can change the value based on your logic
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5FF),
       body: SafeArea(
@@ -75,8 +80,11 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomNavBar(
+        currentIndex: _currentIndex,
         onHomePressed: () {
-          print("Home Pressed");
+          setState(() {
+            _currentIndex = 0;
+          });
         },
         onCalendarPressed: () {
           Navigator.push(
@@ -99,7 +107,6 @@ class DashboardScreen extends StatelessWidget {
         onAddPressed: () {
           print('FAB Clicked');
         },
-        currentIndex: currentIndex, // Pass currentIndex
       ),
     );
   }

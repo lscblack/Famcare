@@ -1,5 +1,6 @@
 import 'package:client/Splash/SplashScreen1.dart';
 import 'package:client/screens/dashboard_screen.dart';
+import 'package:client/screens/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -17,8 +18,10 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
-    BlocProvider(
-      create: (context) => AppBloc(), //
+    MultiBlocProvider(
+      providers: [
+        BlocProvider<AppCubit>(create: (context) => AppCubit()),
+      ],
       child: const FamCare(),
     ),
   );
@@ -29,12 +32,13 @@ class FamCare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AppBloc, AppState>(
+    return BlocBuilder<AppCubit, AppState>(
       builder: (context, state) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           initialRoute: '/',
           routes: {
+            // '/': (context) => Test(),
             '/': (context) => Splashscreen1(),
             '/home': (context) => DashboardScreen(),
             '/profile': (context) => ProfilePage(),

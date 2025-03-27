@@ -38,7 +38,7 @@ dependencies:
 #  path_provider: ^2.1.5
 #  flutter_riverpod: ^2.6.1
   shared_preferences: ^2.5.2
-  flutter_bloc: ^9.0.0
+  flutter_bloc: ^9.1.0
   equatable: ^2.0.5
   flutter_animated_splash: ^0.0.10
   flutter_svg: ^2.0.17
@@ -49,6 +49,7 @@ dependencies:
   firebase_auth: ^5.5.1
   firebase_core: ^3.12.1
   cloud_firestore: ^5.6.5
+  firebase_auth_platform_interface: 7.6.1
   
 
 dev_dependencies:
