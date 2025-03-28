@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/dashboard_screen.dart';
 import '../screens/record_screen.dart';
-import '../screens/ChatScreen.dart';
+import '../screens/chat_list_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key, required Null Function() onChatPressed, required Null Function() onAddPressed, required int currentIndex, required Null Function() onHomePressed, required Null Function() onCalendarPressed, required Null Function() onRecordPressed});
@@ -19,7 +19,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
     DashboardScreen(),
     CalendarScreen(),
     RecordScreen(),
-    ChatScreen(),
+    ChatListScreen(),
   ];
 
   void _onItemTapped(int index) {

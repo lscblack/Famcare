@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'calendar_screen.dart';
 import 'record_screen.dart';
-import 'ChatScreen.dart';
+import 'chat_list_screen.dart';
 import '../Widgets/dashboard_header.dart';
 import '../Widgets/search_bar.dart';
 import '../Widgets/services_section.dart';
@@ -10,6 +10,7 @@ import '../Widgets/plan_section.dart';
 import '../Widgets/reminders_section.dart';
 import '../Widgets/bottom_nav_bar.dart';
 import '../providers/state_provider.dart';
+import 'profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,39 +27,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5FF),
       body: SafeArea(
-        child: BlocBuilder<AppCubit, AppState>(
-          builder: (context, state) {
-            if (state is AppLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        child: SingleChildScrollView(
+          // Wrap the entire Column in SingleChildScrollView
+          child: Column(
+            children: [
+              // Dashboard Header with User Info and Profile Navigation Button
+              BlocBuilder<AppCubit, AppState>(
+                builder: (context, state) {
+                  // Access the user info from the AppCubit state
+                  final userInfo =
+                      state is AppAuthenticated ? state.user : null;
 
-            final currentUser = state is AppAuthenticated ? state.user : null;
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  DashboardHeader(
-                    userName: currentUser?.name ?? 'Guest',
-                    userEmail: currentUser?.email,
-                  ),
-                  const SearchBarWidget(),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        ServicesSection(),
-                        SizedBox(height: 24),
-                        PlanSection(),
-                        SizedBox(height: 24),
-                        RemindersSection(),
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Existing dashboard header widget displaying user info.
+                        DashboardHeader(userName: userInfo?.name ?? 'Guest'),
+                        // New profile navigation button.
+                        IconButton(
+                          icon: const Icon(Icons.person, size: 28),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProfilePage(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
+              const SearchBarWidget(),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    ServicesSection(),
+                    SizedBox(height: 24),
+                    PlanSection(),
+                    SizedBox(height: 24),
+                    RemindersSection(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavBar(
@@ -83,7 +103,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onChatPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ChatScreen()),
+            MaterialPageRoute(builder: (context) => const ChatListScreen()),
           );
         },
         onAddPressed: () {
