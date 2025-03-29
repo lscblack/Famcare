@@ -1,4 +1,5 @@
 import 'package:client/Splash/SplashScreen1.dart';
+import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
 import 'package:client/screens/test.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,40 @@ import 'package:client/screens/calendar_screen.dart';
 import 'package:client/screens/chat_list_screen.dart';
 import 'package:client/screens/record_screen.dart';
 import 'firebase_options.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+
+// Initialize the notifications plugin when the app starts
+Future<void> initNotifications() async {
+  // Initialize time zones
+  tz_data.initializeTimeZones();
+
+  // Set up the notifications plugin
+  final FlutterLocalNotificationsPlugin notifications =
+      FlutterLocalNotificationsPlugin();
+
+  // Initialize notification settings
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  
+  await notifications.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse details) {
+      // Handle notification taps
+      print('Notification tapped: ${details.payload}');
+    },
+  );
+
+  // Request notification permissions
+  final NotificationAppLaunchDetails? launchDetails =
+      await notifications.getNotificationAppLaunchDetails();
+  
+  print('App launched from notification: ${launchDetails?.didNotificationLaunchApp}');
+}
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +81,7 @@ class FamCare extends StatelessWidget {
             '/login': (context) => LoginScreen(),
             '/calendar': (context) => CalendarScreen(),
             '/chat': (context) => ChatListScreen(),
+            '/chat-detail': (context) => ChatScreen(),
             '/record': (context) => RecordScreen(),
           },
         );
