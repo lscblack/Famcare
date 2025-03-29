@@ -110,14 +110,14 @@ class _MedicationManagementScreenState extends State<MedicationManagementScreen>
     Query<Map<String, dynamic>> query = _firestore.collection('medications');
 
     // Filter based on user role
-    if (_userRole == 'patient') {
-      query = query.where('patientId', isEqualTo: _currentUserId);
-    } else if (_userRole == 'caregiver') {
-      query = query.where('assignedCaregiver', isEqualTo: _currentUserId);
-    } else if (_userRole == 'family') {
-      query = query.where('familyId', isEqualTo: _currentUserId);
-    }
-
+    // if (_userRole != 'patient') {
+    //   query = query.where('patientId', isEqualTo: _currentUserId);
+    // } else if (_userRole == 'caregiver') {
+    //   query = query.where('assignedCaregiver', isEqualTo: _currentUserId);
+    // } else if (_userRole == 'family') {
+    //   query = query.where('familyId', isEqualTo: _currentUserId);
+    // }
+    query = query.where('patientId', isEqualTo: _currentUserId);
     // Apply status filters
     List<String> statusFilters = [];
     if (_showPending) statusFilters.add('pending');
