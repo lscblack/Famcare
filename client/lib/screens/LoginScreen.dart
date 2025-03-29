@@ -1,9 +1,9 @@
-import 'package:client/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:client/screens/dashboard_screen.dart';
 import '../providers/state_provider.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,100 +17,71 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _otpController = TextEditingController();
-  final _phoneController = TextEditingController();
-
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _otpSent = false;
-  bool _emailVerified = false;
+  bool _showOtpField = false;
   String? _verificationId;
-  User? _currentUser;
+  String? _phoneNumber;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _otpController.dispose();
-    _phoneController.dispose();
-    super.dispose();
+  bool _validateRwandanPhoneNumber(String phoneNumber) {
+    final regex = RegExp(r'^\+2507[0-9]{8}$');
+    return regex.hasMatch(phoneNumber);
   }
 
-  Future<void> _verifyEmailPassword() async {
+  Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
       });
 
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
-        _currentUser = userCredential.user;
+        final user = userCredential.user;
+        if (user != null) {
+          // Fetch user data from Firestore
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
 
-        // Check if user exists in Firestore and get their phone number
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user?.uid)
-            .get();
+          if (userDoc.exists) {
+            final userData = userDoc.data() as Map<String, dynamic>;
+            _phoneNumber = userData['phone'] as String? ?? '';
 
-        if (userDoc.exists) {
-          String? phoneNumber = userDoc.data()?['phone'] as String?;
-          if (phoneNumber != null && phoneNumber.isNotEmpty) {
-            // Ensure phone number has country code
-            if (!phoneNumber.startsWith('+')) {
-              phoneNumber = '+250${phoneNumber.replaceAll(RegExp(r'^0'), '')}';
+            // Normalize phone number format
+            if (_phoneNumber!.startsWith('07') && _phoneNumber!.length == 10) {
+              _phoneNumber = '+250${_phoneNumber!.substring(1)}';
+            } else if (_phoneNumber!.startsWith('7') && _phoneNumber!.length == 9) {
+              _phoneNumber = '+250$_phoneNumber';
+            } else if (_phoneNumber!.startsWith('2507') && _phoneNumber!.length == 12) {
+              _phoneNumber = '+$_phoneNumber';
             }
-            _phoneController.text = phoneNumber;
+
+            // Validate phone number format
+            if (_phoneNumber!.isEmpty || !_validateRwandanPhoneNumber(_phoneNumber!)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                _buildErrorSnackBar('Invalid phone number format. Please contact support.'),
+              );
+              return;
+            }
+
+            // Always send OTP
+            await _sendOtp();
             setState(() {
-              _emailVerified = true;
+              _showOtpField = true;
             });
-            // await _sendOtp(phoneNumber);
-            await _navigateToDashboard(userCredential.user!);
-          } else {
-            await _navigateToDashboard(userCredential.user!);
           }
-        } else {
-          await _navigateToDashboard(userCredential.user!);
         }
       } on FirebaseAuthException catch (e) {
-        String message = "An error occurred";
-        if (e.code == 'user-not-found') {
-          message = 'No user found for this email.';
-        } else if (e.code == 'wrong-password') {
-          message = 'Incorrect password.';
-        } else if (e.code == 'invalid-email') {
-          message = 'Invalid email address.';
-        } else if (e.code == 'invalid-credential') {
-          message = 'The given credentials are incorrect';
-        } else {
-          message = 'Login failed. Please try again.';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.redAccent,
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8.0),
-                Expanded(
-                  child: Text(
-                    message,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        _handleAuthError(e);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('An unexpected error occurred. Please try again.')),
+          SnackBar(content: Text('An unexpected error occurred. Please try again.')),
         );
       } finally {
         setState(() {
@@ -120,344 +91,190 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _sendOtp(String phoneNumber) async {
+  Future<void> _sendOtp() async {
+    if (_phoneNumber == null) return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
       await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phoneNumber,
+        phoneNumber: _phoneNumber!,
         verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-sign-in if verification completes automatically
           await _verifyOtp(credential.smsCode!);
         },
         verificationFailed: (FirebaseAuthException e) {
-          setState(() {
-            _isLoading = false;
-          });
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.message ?? 'Verification failed'),
-              backgroundColor: Colors.red,
-            ),
+            _buildErrorSnackBar('Failed to send OTP: ${e.message}'),
           );
         },
         codeSent: (String verificationId, int? resendToken) {
           setState(() {
             _verificationId = verificationId;
-            _otpSent = true;
-            _isLoading = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('OTP sent to your phone number'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.green,
-            ),
+            const SnackBar(content: Text('OTP sent to your phone number')),
           );
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           _verificationId = verificationId;
-          setState(() {
-            _isLoading = false;
-          });
         },
         timeout: const Duration(seconds: 60),
       );
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        _buildErrorSnackBar('Failed to send OTP. Please try again.'),
+      );
+    } finally {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to send OTP: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
   Future<void> _verifyOtp(String otp) async {
-    if (otp.isEmpty || otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid 6-digit OTP'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    if (_verificationId == null) return;
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final credential = PhoneAuthProvider.credential(
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: _verificationId!,
         smsCode: otp,
       );
 
-      // Link phone credential to user
-      await _currentUser?.linkWithCredential(credential);
+      // First, get the current user from email/password sign-in
+      User? firebaseUser = FirebaseAuth.instance.currentUser;
 
-      // Update Firestore with verified phone
-      await FirebaseFirestore.instance
+      if (firebaseUser == null) {
+        throw Exception("User not logged in");
+      }
+
+      // Link the phone credential to the existing user
+      await firebaseUser.linkWithCredential(credential);
+
+      // Get user data from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
           .collection('users')
-          .doc(_currentUser!.uid)
-          .update({
-        'phone': _phoneController.text,
-        'phoneVerified': true,
-      });
-
-      await _navigateToDashboard(_currentUser!);
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error verifying OTP: ${e.message}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to verify OTP'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _navigateToDashboard(User user) async {
-    try {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
+          .doc(firebaseUser.uid)
           .get();
 
-      final userInfo = UserInfoFam(
-        id: user.uid,
-        name: user.displayName ?? userDoc.data()?['fullName'] ?? '',
-        email: user.email ?? '',
-        phone: userDoc.data()?['phone'] ?? _phoneController.text,
-      );
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        // print(userData);
+        // Create UserInfoFam object
+        UserInfoFam user = UserInfoFam(
+          id: firebaseUser.uid,
+          name: userData['fullName'] ?? '',
+          email: userData['email'] ?? firebaseUser.email ?? '',
+          phone: userData['phone'] ?? _phoneNumber,
+        );
 
-      await context.read<AppCubit>().saveUser(userInfo);
+        // Save user to app state
+        final appCubit = context.read<AppCubit>();
+        await appCubit.saveUser(user);
 
-      if (mounted) {
+        // Navigate to dashboard
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (context) => DashboardScreen()),
         );
+      } else {
+        throw Exception("User document not found");
       }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Invalid OTP. Please try again.';
+      if (e.code == 'provider-already-linked') {
+        // Phone number is already linked, proceed with getting user data
+        User? firebaseUser = FirebaseAuth.instance.currentUser;
+        if (firebaseUser != null) {
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(firebaseUser.uid)
+              .get();
+
+          if (userDoc.exists) {
+            final userData = userDoc.data() as Map<String, dynamic>;
+
+            UserInfoFam user = UserInfoFam(
+              id: firebaseUser.uid,
+              name: userData['fullName'] ?? '',
+              email: userData['email'] ?? firebaseUser.email ?? '',
+              phone: userData['phone'] ?? _phoneNumber,
+            );
+
+            final appCubit = context.read<AppCubit>();
+            await appCubit.saveUser(user);
+
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => DashboardScreen()),
+            );
+            return;
+          }
+        }
+        errorMessage = 'User data not found. Please try again.';
+      } else if (e.code == 'credential-already-in-use') {
+        errorMessage = 'This phone number is already associated with another account.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        _buildErrorSnackBar(errorMessage),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load user data'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        _buildErrorSnackBar('Verification failed. Please try again.'),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  Widget _buildEmailPasswordForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Email TextFormField
-        TextFormField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Email',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            prefixIcon:
-                const Icon(Icons.email_outlined, color: Color(0xFF48B1A5)),
-          ),
-          keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your email';
-            }
-            // Improved email regex for better validation
-            if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-                .hasMatch(value)) {
-              return 'Please enter a valid email';
-            }
-            return null;
-          },
-        ),
-
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _passwordController,
-          obscureText: _obscurePassword,
-          decoration: InputDecoration(
-            labelText: 'Password',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-            prefixIcon:
-                const Icon(Icons.lock_outline, color: Color(0xFF48B1A5)),
-            suffixIcon: IconButton(
-              icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: const Color(0xFF48B1A5)),
-              onPressed: () =>
-                  setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty)
-              return 'Please enter your password';
-            if (value.length < 8)
-              return 'Password must be at least 8 characters';
-            return null;
-          },
-        ),
-
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: _handleForgotPassword,
-            child: const Text('Forgot Password?',
-                style: TextStyle(color: Color(0xFF48B1A5))),
-          ),
-        ),
-
-        const SizedBox(height: 30),
-
-        ElevatedButton(
-          onPressed: _isLoading ? null : _verifyEmailPassword,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF48B1A5),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0)),
-          ),
-          child: _isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-              : const Text('Sign in', style: TextStyle(fontSize: 18)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOtpVerificationForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'Enter the OTP sent to ${_phoneController.text}',
-          style: const TextStyle(fontSize: 16),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 20),
-        TextFormField(
-          controller: _otpController,
-          decoration: InputDecoration(
-            labelText: 'OTP',
-            border:
-                OutlineInputBorder(borderRadius: BorderRadius.circular(8.0)),
-            prefixIcon:
-                const Icon(Icons.sms_outlined, color: Color(0xFF48B1A5)),
-          ),
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Please enter the OTP';
-            if (value.length != 6) return 'OTP must be 6 digits';
-            return null;
-          },
-        ),
-        const SizedBox(height: 20),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed:
-                _isLoading ? null : () => _sendOtp(_phoneController.text),
-            child: const Text('Resend OTP',
-                style: TextStyle(color: Color(0xFF48B1A5))),
-          ),
-        ),
-        const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: _isLoading ? null : () => _verifyOtp(_otpController.text),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF48B1A5),
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30.0)),
-          ),
-          child: _isLoading
-              ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
-              : const Text('Verify OTP', style: TextStyle(fontSize: 18)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopSection(double screenWidth) {
-    return SizedBox(
-      width: screenWidth,
-      height: 400,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
+  SnackBar _buildErrorSnackBar(String message) {
+    return SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.redAccent,
+      content: Row(
         children: [
-          Positioned(
-            top: 0,
-            left: screenWidth * -0.25,
-            child: Container(
-              width: screenWidth * 1.5,
-              height: 350,
-              decoration: const BoxDecoration(
-                color: Color(0xFF48B1A5),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(400),
-                    bottomRight: Radius.circular(400)),
-              ),
+          const Icon(Icons.error, color: Colors.white),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
             ),
-          ),
-          Positioned(
-            top: 30,
-            child: Center(
-                child: Image.asset('assets/logos/trans.png', width: 260)),
-          ),
-          Positioned(
-            top: 210,
-            child: Column(
-              children: [
-                const Text('FAM CARE',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold)),
-                const Text('we love and care',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: -30,
-            child: Text('Stay Healthy, Stay Inspired!',
-                style: TextStyle(
-                    color: const Color(0xFF48B1A5),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500)),
           ),
         ],
       ),
     );
+  }
+
+  void _handleAuthError(FirebaseAuthException e) {
+    String message = "An error occurred";
+    if (e.code == 'user-not-found') {
+      message = 'No user found for this email.';
+    } else if (e.code == 'wrong-password') {
+      message = 'Incorrect password.';
+    } else if (e.code == 'invalid-email') {
+      message = 'Invalid email address.';
+    } else if (e.code == 'invalid-credential') {
+      message = 'The given credential are incorrect';
+    } else {
+      message = 'Login failed. Please try again.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(_buildErrorSnackBar(message));
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _otpController.dispose();
+    super.dispose();
   }
 
   @override
@@ -469,8 +286,76 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            _buildTopSection(screenWidth),
-            const SizedBox(height: 40),
+            SizedBox(
+              width: screenWidth,
+              height: 400,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    top: 0,
+                    left: screenWidth * -0.25,
+                    child: Container(
+                      width: screenWidth * 1.5,
+                      height: 350,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF48B1A5),
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(400),
+                          bottomRight: Radius.circular(400),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 30,
+                    child: Center(
+                      child: Image.asset(
+                        'assets/logos/trans.png',
+                        width: 260,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 210,
+                    child: Column(
+                      children: [
+                        const Text(
+                          'FAM CARE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Text(
+                          'we love and care',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -30,
+                    child: Text(
+                      'Stay Healthy, Stay Inspired!',
+                      style: TextStyle(
+                        color: const Color(0xFF48B1A5),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 60),
+
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Form(
@@ -478,40 +363,222 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (!_emailVerified) _buildEmailPasswordForm(),
-                    if (_emailVerified && !_otpSent)
-                      const Center(child: CircularProgressIndicator()),
-                    if (_otpSent) _buildOtpVerificationForm(),
-                    // Sign up text
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Don\'t have an account ? ',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
+                    // Only show email/password when OTP is not shown
+                    if (!_showOtpField) ...[
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF48B1A5),
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to sign up
-                            Navigator.pushNamed(context, '/register');
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(50, 30),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: const Color(0xFF48B1A5),
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+
+                    // Show OTP field when needed
+                    if (_showOtpField) ...[
+                      TextFormField(
+                        controller: _otpController,
+                        decoration: InputDecoration(
+                          labelText: 'OTP',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          suffixIcon: const Icon(
+                            Icons.sms_outlined,
+                            color: Color(0xFF48B1A5),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter the OTP';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: _sendOtp,
+                        child: const Text(
+                          'Resend OTP',
+                          style: TextStyle(color: Color(0xFF48B1A5)),
+                        ),
+                      ),
+                    ],
+
+                    if (!_showOtpField) ...[
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            // Handle forgot password
+                          },
                           child: const Text(
-                            'Signup',
+                            'Forgot Password',
                             style: TextStyle(
                               color: Color(0xFF48B1A5),
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 30),
+                    ],
+
+                    ElevatedButton(
+                      onPressed: _isLoading
+                          ? null
+                          : _showOtpField
+                          ? () => _verifyOtp(_otpController.text.trim())
+                          : _signIn,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF48B1A5),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                          : Text(
+                        _showOtpField ? 'Verify OTP' : 'Sign in',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
+
+                    if (!_showOtpField) ...[
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey.shade300,
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Text(
+                              'or continue with',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Colors.grey.shade300,
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () {},
+                            child: const Icon(Icons.g_mobiledata_rounded,
+                                size: 39, color: Colors.red),
+                          ),
+                          const SizedBox(width: 20),
+                          InkWell(
+                            onTap: () {},
+                            child: const Icon(Icons.apple,
+                                size: 30, color: Colors.black),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 30),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Don\'t have an account ? ',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/register');
+                            },
+                            child: const Text(
+                              'Signup',
+                              style: TextStyle(
+                                color: Color(0xFF48B1A5),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -520,26 +587,5 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _handleForgotPassword() async {
-    if (_emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Please enter your email first'),
-          backgroundColor: Colors.red));
-      return;
-    }
-
-    try {
-      await FirebaseAuth.instance
-          .sendPasswordResetEmail(email: _emailController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Password reset email sent'),
-          backgroundColor: Colors.green));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to send reset email: ${e.toString()}'),
-          backgroundColor: Colors.red));
-    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:client/Splash/SplashScreen1.dart';
+import 'package:client/screens/Test_Phone.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
 import 'package:client/screens/test.dart';
@@ -73,7 +74,7 @@ class FamCare extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           initialRoute: '/',
           routes: {
-            // '/': (context) => Test(),
+            // '/': (context) => RwandaPhoneAuth(),
             '/': (context) => Splashscreen1(),
             '/home': (context) => DashboardScreen(),
             '/profile': (context) => ProfilePage(),
