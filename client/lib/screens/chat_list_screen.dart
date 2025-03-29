@@ -8,12 +8,6 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'calendar_screen.dart';
 import 'record_screen.dart';
 
-// Color constants
-const primaryGreen = Color(0xFF499F97);
-const primaryBlue = Color(0xFF2260FF);
-const primaryBg = Color(0xFFF1F5FF);
-const secondaryGreen = Color(0xFF215D57);
-
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({Key? key}) : super(key: key);
 

@@ -18,39 +18,45 @@ import 'package:timezone/data/latest.dart' as tz_data;
 
 // Initialize the notifications plugin when the app starts
 Future<void> initNotifications() async {
-  // Initialize time zones
   tz_data.initializeTimeZones();
 
-  // Set up the notifications plugin
   final FlutterLocalNotificationsPlugin notifications =
       FlutterLocalNotificationsPlugin();
 
-  // Initialize notification settings
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
-  
+
   const InitializationSettings initializationSettings =
       InitializationSettings(android: initializationSettingsAndroid);
-  
+
   await notifications.initialize(
     initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse details) {
-      // Handle notification taps
-      print('Notification tapped: ${details.payload}');
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // Handle notification taps by navigating to calendar
+      if (response.payload != null) {
+        navigatorKey.currentState?.pushNamed('/calendar');
+      }
     },
   );
+
+  // Request permissions (add for iOS)
+  await notifications
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.requestNotificationsPermission();
 
   // Request notification permissions
   final NotificationAppLaunchDetails? launchDetails =
       await notifications.getNotificationAppLaunchDetails();
-  
-  print('App launched from notification: ${launchDetails?.didNotificationLaunchApp}');
-}
 
+  print(
+      'App launched from notification: ${launchDetails?.didNotificationLaunchApp}');
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await initNotifications();
 
   runApp(
     MultiBlocProvider(
@@ -62,6 +68,8 @@ void main() async {
   );
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class FamCare extends StatelessWidget {
   const FamCare({super.key});
 
@@ -71,6 +79,7 @@ class FamCare extends StatelessWidget {
       builder: (context, state) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
+          navigatorKey: navigatorKey,
           initialRoute: '/',
           routes: {
             // '/': (context) => RwandaPhoneAuth(),
