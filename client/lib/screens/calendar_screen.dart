@@ -47,32 +47,37 @@ class _CalendarGridState extends State<CalendarGrid> {
   }
 
   void _generateCalendarDays() {
-    final DateTime firstDayOfMonth = DateTime(widget.focusedDate.year, widget.focusedDate.month, 1);
-    final int daysInMonth = DateTime(widget.focusedDate.year, widget.focusedDate.month + 1, 0).day;
-    
+    final DateTime firstDayOfMonth =
+        DateTime(widget.focusedDate.year, widget.focusedDate.month, 1);
+    final int daysInMonth =
+        DateTime(widget.focusedDate.year, widget.focusedDate.month + 1, 0).day;
+
     // Get the weekday of the first day (0 = Monday, 6 = Sunday in DateTime)
     int firstWeekdayOfMonth = firstDayOfMonth.weekday;
     // Adjust to make Sunday = 0, Saturday = 6
     firstWeekdayOfMonth = firstWeekdayOfMonth % 7;
-    
+
     // Calculate days from previous month to show
     List<DateTime> days = [];
     for (int i = 0; i < firstWeekdayOfMonth; i++) {
-      days.add(firstDayOfMonth.subtract(Duration(days: firstWeekdayOfMonth - i)));
+      days.add(
+          firstDayOfMonth.subtract(Duration(days: firstWeekdayOfMonth - i)));
     }
-    
+
     // Add days of current month
     for (int i = 0; i < daysInMonth; i++) {
-      days.add(DateTime(widget.focusedDate.year, widget.focusedDate.month, i + 1));
+      days.add(
+          DateTime(widget.focusedDate.year, widget.focusedDate.month, i + 1));
     }
-    
+
     // Add days from next month to complete the grid (6 rows x 7 days = 42 cells)
     int remainingDays = 42 - days.length;
-    DateTime lastDayOfMonth = DateTime(widget.focusedDate.year, widget.focusedDate.month, daysInMonth);
+    DateTime lastDayOfMonth = DateTime(
+        widget.focusedDate.year, widget.focusedDate.month, daysInMonth);
     for (int i = 1; i <= remainingDays; i++) {
       days.add(lastDayOfMonth.add(Duration(days: i)));
     }
-    
+
     _calendarDays = days;
   }
 
@@ -100,7 +105,8 @@ class _CalendarGridState extends State<CalendarGrid> {
       final tasksSnapshot = await FirebaseFirestore.instance
           .collection('tasks')
           .where('familyId', isEqualTo: families.first)
-          .where('dueDate', isGreaterThanOrEqualTo: Timestamp.fromDate(firstDay))
+          .where('dueDate',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(firstDay))
           .where('dueDate', isLessThan: Timestamp.fromDate(lastDay))
           .get();
 
@@ -109,7 +115,7 @@ class _CalendarGridState extends State<CalendarGrid> {
         final task = doc.data();
         final dueDate = (task['dueDate'] as Timestamp).toDate();
         final dayStart = DateTime(dueDate.year, dueDate.month, dueDate.day);
-        
+
         taskCounts[dayStart] = (taskCounts[dayStart] ?? 0) + 1;
       }
 
@@ -173,10 +179,10 @@ class _CalendarGridState extends State<CalendarGrid> {
         final isToday = day.year == DateTime.now().year &&
             day.month == DateTime.now().month &&
             day.day == DateTime.now().day;
-        
+
         final dayStart = DateTime(day.year, day.month, day.day);
         final taskCount = _taskCountByDay[dayStart] ?? 0;
-        
+
         return GestureDetector(
           onTap: () {
             setState(() {
@@ -217,7 +223,8 @@ class _CalendarGridState extends State<CalendarGrid> {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : const Color(0xFF37B5B6),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF37B5B6),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -229,15 +236,110 @@ class _CalendarGridState extends State<CalendarGrid> {
     );
   }
 
+  Color? _getStatusColor(String status) {
+    switch (status) {
+      case 'completed':
+        return Colors.green[100];
+      case 'cancelled':
+        return Colors.grey[100];
+      case 'overdue':
+        return Colors.red[100];
+      default:
+        return Colors.orange[100];
+    }
+  }
+
+  Future<String> _checkOverdue(Map<String, dynamic> task) async {
+    final dueDate = (task['dueDate'] as Timestamp).toDate();
+    final status = task['status'] as String;
+
+    if (status == 'pending' && dueDate.isBefore(DateTime.now())) {
+      await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(task['id'])
+          .update({'status': 'overdue'});
+      return 'overdue';
+    }
+    return status;
+  }
+
+  Future<void> _updateTaskStatus(String taskId, String newStatus) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('tasks')
+          .doc(taskId)
+          .update({'status': newStatus});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating status: ${e.toString()}')),
+      );
+    }
+  }
+
+  void _showEditStatusDialog(
+      BuildContext context, String taskId, String currentStatus) {
+    String? selectedStatus = currentStatus;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Task Status'),
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<String>(
+                title: const Text('Pending'),
+                value: 'pending',
+                groupValue: selectedStatus,
+                onChanged: (value) => setState(() => selectedStatus = value),
+              ),
+              RadioListTile<String>(
+                title: const Text('Completed'),
+                value: 'completed',
+                groupValue: selectedStatus,
+                onChanged: (value) => setState(() => selectedStatus = value),
+              ),
+              RadioListTile<String>(
+                title: const Text('Cancelled'),
+                value: 'cancelled',
+                groupValue: selectedStatus,
+                onChanged: (value) => setState(() => selectedStatus = value),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (selectedStatus != null) {
+                _updateTaskStatus(taskId, selectedStatus!);
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF37B5B6),
+            ),
+            child: const Text('Update Status'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTaskList() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
           .collection('tasks')
           .where('dueDate',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(
-                  DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)),
-              isLessThan: Timestamp.fromDate(
-                  DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day + 1)))
+              isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime(
+                  _selectedDate.year, _selectedDate.month, _selectedDate.day)),
+              isLessThan: Timestamp.fromDate(DateTime(_selectedDate.year,
+                  _selectedDate.month, _selectedDate.day + 1)))
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -251,16 +353,19 @@ class _CalendarGridState extends State<CalendarGrid> {
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Column(
             children: [
-              const Text('No tasks for this day', style: TextStyle(color: Colors.grey)),
+              const Text('No tasks for this day',
+                  style: TextStyle(color: Colors.grey)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => _showAddTaskDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF37B5B6),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text('Add Task', style: TextStyle(color: Colors.white)),
+                label: const Text('Add Task',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           );
@@ -273,15 +378,22 @@ class _CalendarGridState extends State<CalendarGrid> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
+                  onTap: () =>
+                      _showEditStatusDialog(context, doc.id, task['status']),
                   title: Text(task['title']),
                   subtitle: Text(
-                    DateFormat('hh:mm a').format((task['dueDate'] as Timestamp).toDate()),
+                    DateFormat('hh:mm a')
+                        .format((task['dueDate'] as Timestamp).toDate()),
                   ),
-                  trailing: Chip(
-                    label: Text(task['status']),
-                    backgroundColor: task['status'] == 'completed'
-                        ? Colors.green[100]
-                        : Colors.orange[100],
+                  trailing: FutureBuilder(
+                    future: _checkOverdue(task),
+                    builder: (context, snapshot) {
+                      final status = snapshot.data ?? task['status'];
+                      return Chip(
+                        label: Text(status),
+                        backgroundColor: _getStatusColor(status),
+                      );
+                    },
                   ),
                 ),
               );
@@ -291,10 +403,12 @@ class _CalendarGridState extends State<CalendarGrid> {
               onPressed: () => _showAddTaskDialog(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF37B5B6),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               icon: const Icon(Icons.add, color: Colors.white),
-              label: const Text('Add Task', style: TextStyle(color: Colors.white)),
+              label:
+                  const Text('Add Task', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -336,7 +450,8 @@ class _CalendarGridState extends State<CalendarGrid> {
                       final date = await showDatePicker(
                         context: context,
                         initialDate: selectedDate,
-                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (date != null) setState(() => selectedDate = date);
@@ -387,28 +502,32 @@ class _CalendarGridState extends State<CalendarGrid> {
                     title: const Text('None'),
                     value: 'none',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Daily'),
                     value: 'daily',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Weekly'),
                     value: 'weekly',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Monthly'),
                     value: 'monthly',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                 ],
@@ -443,8 +562,8 @@ class _CalendarGridState extends State<CalendarGrid> {
     );
   }
 
-  Future<void> _createTask(
-      BuildContext context, String title, DateTime date, TimeOfDay time, String repeatOption) async {
+  Future<void> _createTask(BuildContext context, String title, DateTime date,
+      TimeOfDay time, String repeatOption) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('User not logged in');
@@ -474,7 +593,8 @@ class _CalendarGridState extends State<CalendarGrid> {
         'repeatOption': repeatOption,
       };
 
-      final taskRef = await FirebaseFirestore.instance.collection('tasks').add(taskData);
+      final taskRef =
+          await FirebaseFirestore.instance.collection('tasks').add(taskData);
 
       // Create recurring tasks if needed
       if (repeatOption != 'none') {
@@ -499,14 +619,15 @@ class _CalendarGridState extends State<CalendarGrid> {
     }
   }
 
-  Future<void> _createRecurringTasks(String originalTaskId, Map<String, dynamic> taskData, String repeatOption) async {
+  Future<void> _createRecurringTasks(String originalTaskId,
+      Map<String, dynamic> taskData, String repeatOption) async {
     try {
       final batchSize = 10; // Limit number of recurring tasks to create at once
       final batch = FirebaseFirestore.instance.batch();
-      
+
       DateTime originalDate = taskData['dueDate'];
       DateTime nextDate;
-      
+
       for (int i = 1; i <= batchSize; i++) {
         switch (repeatOption) {
           case 'daily':
@@ -527,15 +648,15 @@ class _CalendarGridState extends State<CalendarGrid> {
           default:
             continue;
         }
-        
+
         final newTaskRef = FirebaseFirestore.instance.collection('tasks').doc();
         final newTaskData = Map<String, dynamic>.from(taskData);
         newTaskData['dueDate'] = nextDate;
         newTaskData['parentTaskId'] = originalTaskId;
-        
+
         batch.set(newTaskRef, newTaskData);
       }
-      
+
       await batch.commit();
     } catch (e) {
       print('Error creating recurring tasks: $e');
@@ -642,48 +763,49 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDate = DateTime(
-                          _focusedDate.year,
-                          _focusedDate.month - 1,
-                          1,
-                        );
-                      });
-                    },
-                  ),
-                  Text(
-                    DateFormat('MMMM yyyy').format(_focusedDate),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF37B5B6),
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios),
+                      onPressed: () {
+                        setState(() {
+                          _focusedDate = DateTime(
+                            _focusedDate.year,
+                            _focusedDate.month - 1,
+                            1,
+                          );
+                        });
+                      },
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios),
-                    onPressed: () {
-                      setState(() {
-                        _focusedDate = DateTime(
-                          _focusedDate.year,
-                          _focusedDate.month + 1,
-                          1,
-                        );
-                      });
-                    },
-                  ),
-                ],
+                    Text(
+                      DateFormat('MMMM yyyy').format(_focusedDate),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF37B5B6),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios),
+                      onPressed: () {
+                        setState(() {
+                          _focusedDate = DateTime(
+                            _focusedDate.year,
+                            _focusedDate.month + 1,
+                            1,
+                          );
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Container(
+              Container(
                 margin: const EdgeInsets.all(16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -702,9 +824,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   onDateSelected: _onDateSelected,
                 ),
               ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTaskDialog(context),
@@ -772,7 +894,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       final date = await showDatePicker(
                         context: context,
                         initialDate: selectedDate,
-                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                        firstDate:
+                            DateTime.now().subtract(const Duration(days: 365)),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (date != null) setState(() => selectedDate = date);
@@ -823,28 +946,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     title: const Text('None'),
                     value: 'none',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Daily'),
                     value: 'daily',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Weekly'),
                     value: 'weekly',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                   RadioListTile(
                     title: const Text('Monthly'),
                     value: 'monthly',
                     groupValue: repeatOption,
-                    onChanged: (value) => setState(() => repeatOption = value.toString()),
+                    onChanged: (value) =>
+                        setState(() => repeatOption = value.toString()),
                     activeColor: const Color(0xFF37B5B6),
                   ),
                 ],
@@ -880,14 +1007,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-      Future<void> _createRecurringTasks(String originalTaskId, Map<String, dynamic> taskData, String repeatOption) async {
+  Future<void> _createRecurringTasks(String originalTaskId,
+      Map<String, dynamic> taskData, String repeatOption) async {
     try {
       final batchSize = 10; // Limit number of recurring tasks to create at once
       final batch = FirebaseFirestore.instance.batch();
-      
+
       DateTime originalDate = taskData['dueDate'];
       DateTime nextDate;
-      
+
       for (int i = 1; i <= batchSize; i++) {
         switch (repeatOption) {
           case 'daily':
@@ -908,15 +1036,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
           default:
             continue;
         }
-        
+
         final newTaskRef = FirebaseFirestore.instance.collection('tasks').doc();
         final newTaskData = Map<String, dynamic>.from(taskData);
         newTaskData['dueDate'] = nextDate;
         newTaskData['parentTaskId'] = originalTaskId;
-        
+
         batch.set(newTaskRef, newTaskData);
       }
-      
+
       await batch.commit();
     } catch (e) {
       print('Error creating recurring tasks: $e');
@@ -939,10 +1067,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       // Initialize notification settings
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
-      
+
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
-      
+
       await notifications.initialize(initializationSettings);
 
       // Get the local timezone
@@ -962,27 +1090,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
         playSound: true,
       );
 
-    // Create the NotificationDetails object
-    const NotificationDetails notificationDetails =
-        NotificationDetails(android: androidDetails);
+      // Create the NotificationDetails object
+      const NotificationDetails notificationDetails =
+          NotificationDetails(android: androidDetails);
 
-    // Schedule the notification
-    await notifications.zonedSchedule(
-      taskId.hashCode, // Unique notification ID (taskId.hashCode)
-      'Task Reminder', // Notification title
-      title, // Notification content (title of the task)
-      scheduledDate, // The time to schedule the notification
-      notificationDetails, // Notification details for Android
-      matchDateTimeComponents: DateTimeComponents
-          .time, // Match based on time components (hour, minute)
-      androidScheduleMode: AndroidScheduleMode
-          .exactAllowWhileIdle, // Exact schedule even when idle
-    );
+      // Schedule the notification
+      await notifications.zonedSchedule(
+        taskId.hashCode, // Unique notification ID (taskId.hashCode)
+        'Task Reminder', // Notification title
+        title, // Notification content (title of the task)
+        scheduledDate, // The time to schedule the notification
+        notificationDetails, // Notification details for Android
+        matchDateTimeComponents: DateTimeComponents
+            .time, // Match based on time components (hour, minute)
+        androidScheduleMode: AndroidScheduleMode
+            .exactAllowWhileIdle, // Exact schedule even when idle
+      );
     } catch (e) {
       print('Error scheduling notification: $e');
     }
   }
-
 
   Future<void> _createTask(
       String title, DateTime date, TimeOfDay time, String repeatOption) async {
@@ -1015,7 +1142,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         'repeatOption': repeatOption,
       };
 
-      final taskRef = await FirebaseFirestore.instance.collection('tasks').add(taskData);
+      final taskRef =
+          await FirebaseFirestore.instance.collection('tasks').add(taskData);
 
       // Create recurring tasks if needed
       if (repeatOption != 'none') {
@@ -1036,6 +1164,5 @@ class _CalendarScreenState extends State<CalendarScreen> {
         SnackBar(content: Text('Error creating task: ${e.toString()}')),
       );
     }
-
-}
+  }
 }
