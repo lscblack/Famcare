@@ -1,3 +1,4 @@
+import 'package:client/screens/MedicalRecords.dart';
 import 'package:flutter/material.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/dashboard_screen.dart';
@@ -72,7 +73,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
           child: FloatingActionButton(
             onPressed: () {
               // Add button action here
-              print("Add button pressed");
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => MedicationManagementScreen()),
+              );
             },
             backgroundColor: const Color(0xFF3F8585),
             elevation: 8,

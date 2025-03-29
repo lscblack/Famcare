@@ -38,31 +38,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final userInfo =
                       state is AppAuthenticated ? state.user : null;
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Existing dashboard header widget displaying user info.
-                        DashboardHeader(userName: userInfo?.name ?? 'Guest'),
-                        // New profile navigation button.
-                        IconButton(
-                          icon: const Icon(Icons.person, size: 28),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ProfilePage(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  );
+                  return  DashboardHeader(userName: userInfo?.name ?? 'Guest');
+
                 },
+
               ),
+
               const SearchBarWidget(),
               Padding(
                 padding: const EdgeInsets.all(16.0),

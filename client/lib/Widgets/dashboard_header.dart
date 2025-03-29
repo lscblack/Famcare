@@ -1,4 +1,5 @@
 import 'package:client/screens/LoginScreen.dart';
+import 'package:client/screens/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,65 +52,101 @@ class DashboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      child: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Profile Picture Placeholder
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfilePage(),
+                  ),
+                );
+              },
+              child: CircleAvatar(
+                radius: 30,
+                backgroundColor: const Color(0xFF48B1A5).withOpacity(0.1),
+                child: Icon(
+                  Icons.person,
+                  color: const Color(0xFF48B1A5),
+                  size: 35,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // User Info
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
+                  Text(
                     'Hello !!',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFF48B1A5),
+                      color: Colors.grey[600],
                       fontFamily: 'Poppins',
                     ),
                   ),
                   Text(
                     userName,
                     style: const TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF48B1A5),
                       fontFamily: 'Poppins',
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   if (userEmail != null)
                     Text(
                       userEmail!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey,
+                        color: Colors.grey[500],
                         fontFamily: 'Poppins',
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),
-              GestureDetector(
-                onTap: () => _logout(context),
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF48B1A5),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: const Icon(
-                    Icons.logout,
-                    color: Colors.white,
-                    size: 30,
-                  ),
+            ),
+
+            // Logout Button
+            GestureDetector(
+              onTap: () => _logout(context),
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF48B1A5),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF48B1A5).withOpacity(0.3),
+                      spreadRadius: 1,
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.logout,
+                  color: Colors.white,
+                  size: 26,
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
