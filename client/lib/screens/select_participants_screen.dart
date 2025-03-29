@@ -63,7 +63,7 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
               .collection('users')
               .doc(id)
               .get();
-          return User.fromMap(doc.data()!);
+          return User.fromFirestore(doc!);
         }),
       );
 
@@ -106,11 +106,8 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
       if (existingChat != null) {
         Navigator.pop(context);
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatScreen(chatId: existingChat!.id),
-            ));
+        Navigator.pushNamed(context, '/chat-detail',
+            arguments: existingChat.id);
         return;
       }
 
@@ -127,11 +124,8 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
       // Navigate to new chat
       Navigator.pop(context);
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatScreen(chatId: newChatRef.id),
-          ));
+
+      Navigator.pushNamed(context, '/chat-detail', arguments: newChatRef.id);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error creating chat: $e')),
@@ -199,15 +193,41 @@ class _SelectParticipantsScreenState extends State<SelectParticipantsScreen> {
 
 // Helper classes
 class User {
-  final String id;
+  final String id; // Matches Firestore document ID
   final String fullName;
+  final String email;
+  final String role;
+  final String profileImageUrl;
+  final String languagePreference;
+  final Map<String, bool> notificationPreferences;
+  final DateTime createdAt;
+  final List<String> families;
 
-  User({required this.id, required this.fullName});
+  User({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    required this.role,
+    required this.profileImageUrl,
+    required this.languagePreference,
+    required this.notificationPreferences,
+    required this.createdAt,
+    required this.families,
+  });
 
-  factory User.fromMap(Map<String, dynamic> data) {
+  factory User.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return User(
-      id: data['userID'],
+      id: doc.id, // Use document ID instead of non-existent 'userID' field
       fullName: data['fullName'],
+      email: data['email'],
+      role: data['role'],
+      profileImageUrl: data['profileImageUrl'],
+      languagePreference: data['languagePreference'],
+      notificationPreferences:
+          Map<String, bool>.from(data['notificationPreferences']),
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      families: List<String>.from(data['families']),
     );
   }
 }
