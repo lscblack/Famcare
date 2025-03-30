@@ -249,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return;
           }
         }
-        errorMessage = 'User data not found. Please try again.';
+        errorMessage = 'User Info not found. Please try again.';
       } else if (e.code == 'credential-already-in-use') {
         errorMessage =
             'This phone number is already associated with another account.';
