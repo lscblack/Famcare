@@ -10,7 +10,6 @@ import '../Widgets/plan_section.dart';
 import '../Widgets/reminders_section.dart';
 import '../Widgets/bottom_nav_bar.dart';
 import '../providers/state_provider.dart';
-import 'profile_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

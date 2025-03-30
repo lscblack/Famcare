@@ -35,8 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
@@ -56,32 +56,67 @@ class _LoginScreenState extends State<LoginScreen> {
             // Normalize phone number format
             if (_phoneNumber!.startsWith('07') && _phoneNumber!.length == 10) {
               _phoneNumber = '+250${_phoneNumber!.substring(1)}';
-            } else if (_phoneNumber!.startsWith('7') && _phoneNumber!.length == 9) {
+            } else if (_phoneNumber!.startsWith('7') &&
+                _phoneNumber!.length == 9) {
               _phoneNumber = '+250$_phoneNumber';
-            } else if (_phoneNumber!.startsWith('2507') && _phoneNumber!.length == 12) {
+            } else if (_phoneNumber!.startsWith('2507') &&
+                _phoneNumber!.length == 12) {
               _phoneNumber = '+$_phoneNumber';
             }
 
             // Validate phone number format
-            if (_phoneNumber!.isEmpty || !_validateRwandanPhoneNumber(_phoneNumber!)) {
+            if (_phoneNumber!.isEmpty ||
+                !_validateRwandanPhoneNumber(_phoneNumber!)) {
               ScaffoldMessenger.of(context).showSnackBar(
-                _buildErrorSnackBar('Invalid phone number format. Please contact support.'),
+                _buildErrorSnackBar(
+                    'Invalid phone number format. Please contact support.'),
               );
               return;
             }
 
-            // Always send OTP
-            await _sendOtp();
-            setState(() {
-              _showOtpField = true;
-            });
+            User? firebaseUser = FirebaseAuth.instance.currentUser;
+            if (firebaseUser != null) {
+              // // Get user data from Firestore
+              DocumentSnapshot userDoc = await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(firebaseUser?.uid)
+                  .get();
+
+              if (userDoc.exists) {
+                final userData = userDoc.data() as Map<String, dynamic>;
+                // print(userData);
+                // Create UserInfoFam object
+                UserInfoFam user = UserInfoFam(
+                  id: firebaseUser.uid,
+                  name: userData['fullName'] ?? '',
+                  email: userData['email'] ?? firebaseUser.email ?? '',
+                  phone: userData['phone'] ?? _phoneNumber,
+                );
+
+                //   // Save user to app state
+                final appCubit = context.read<AppCubit>();
+                await appCubit.saveUser(user);
+
+                // Navigate to dashboard
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => DashboardScreen()),
+                );
+              }
+            }
+
+            // // Always send OTP
+            // await _sendOtp();
+            // setState(() {
+            //   _showOtpField = true;
+            // });
           }
         }
       } on FirebaseAuthException catch (e) {
         _handleAuthError(e);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An unexpected error occurred. Please try again.')),
+          SnackBar(
+              content: Text('An unexpected error occurred. Please try again.')),
         );
       } finally {
         setState(() {
@@ -216,7 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
         }
         errorMessage = 'User data not found. Please try again.';
       } else if (e.code == 'credential-already-in-use') {
-        errorMessage = 'This phone number is already associated with another account.';
+        errorMessage =
+            'This phone number is already associated with another account.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -353,9 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 60),
-
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Form(
@@ -486,8 +520,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _isLoading
                           ? null
                           : _showOtpField
-                          ? () => _verifyOtp(_otpController.text.trim())
-                          : _signIn,
+                              ? () => _verifyOtp(_otpController.text.trim())
+                              : _signIn,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF48B1A5),
                         foregroundColor: Colors.white,
@@ -498,15 +532,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            )
                           : Text(
-                        _showOtpField ? 'Verify OTP' : 'Sign in',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                              _showOtpField ? 'Verify OTP' : 'Sign in',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
 
                     if (!_showOtpField) ...[
@@ -520,7 +555,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Text(
                               'or continue with',
                               style: TextStyle(

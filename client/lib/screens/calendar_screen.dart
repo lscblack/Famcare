@@ -617,6 +617,7 @@ class _CalendarGridState extends State<CalendarGrid> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error creating task: ${e.toString()}')),
       );
+      print("Error creating task: ${e.toString()}");
     }
   }
 
@@ -669,45 +670,47 @@ class _CalendarGridState extends State<CalendarGrid> {
     DateTime dueDate,
     String taskId,
   ) async {
-    // Initialize time zones
-    tz_data.initializeTimeZones();
+    try {
+      final FlutterLocalNotificationsPlugin notifications =
+          FlutterLocalNotificationsPlugin();
 
-    // Set up the notifications plugin
-    final FlutterLocalNotificationsPlugin notifications =
-        FlutterLocalNotificationsPlugin();
+      // Get the local timezone
+      final location = tz.getLocation('Africa/Johannesburg');
 
-    // Get the local timezone
-    final location = tz.local;
+      // Convert the dueDate to the local timezone
+      final scheduledDate = tz.TZDateTime.from(dueDate, location);
 
-    // Convert the dueDate to the local timezone
-    final scheduledDate = tz.TZDateTime.from(dueDate, location);
+      // Set up the Android notification details
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'task_channel',
+        'Task Reminders',
+        channelDescription: 'Notifications for task reminders',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+      );
 
-    // Set up the Android notification details
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-      'task_channel',
-      'Task Reminders',
-      importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
-    );
+      // Create the NotificationDetails object
+      const NotificationDetails notificationDetails =
+          NotificationDetails(android: androidDetails);
 
-    // Create the NotificationDetails object
-    const NotificationDetails notificationDetails =
-        NotificationDetails(android: androidDetails);
-
-    // Schedule the notification
-    await notifications.zonedSchedule(
-      taskId.hashCode, // Unique notification ID (taskId.hashCode)
-      'Task Reminder', // Notification title
-      title, // Notification content (title of the task)
-      scheduledDate, // The time to schedule the notification
-      notificationDetails, // Notification details for Android
-      matchDateTimeComponents: DateTimeComponents
-          .time, // Match based on time components (hour, minute)
-      androidScheduleMode: AndroidScheduleMode
-          .exactAllowWhileIdle, // Exact schedule even when idle
-    );
+      // Schedule the notification
+      await notifications.zonedSchedule(
+        taskId.hashCode, // Unique notification ID (taskId.hashCode)
+        'Task Reminder', // Notification title
+        title, // Notification content (title of the task)
+        scheduledDate, // The time to schedule the notification
+        notificationDetails, // Notification details for Android
+        matchDateTimeComponents: DateTimeComponents
+            .time, // Match based on time components (hour, minute)
+        androidScheduleMode: AndroidScheduleMode
+            .exactAllowWhileIdle, // Exact schedule even when idle
+      );
+      print("Scheduled Date: $scheduledDate");
+    } catch (e) {
+      print('Error scheduling notification: $e');
+    }
   }
 }
 
@@ -1067,24 +1070,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
     String taskId,
   ) async {
     try {
-      // Initialize time zones
-      tz_data.initializeTimeZones();
-
-      // Set up the notifications plugin
       final FlutterLocalNotificationsPlugin notifications =
           FlutterLocalNotificationsPlugin();
 
-      // Initialize notification settings
-      const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
-
-      const InitializationSettings initializationSettings =
-          InitializationSettings(android: initializationSettingsAndroid);
-
-      await notifications.initialize(initializationSettings);
-
       // Get the local timezone
-      final location = tz.local;
+      final location = tz.getLocation('Africa/Johannesburg');
+      ;
 
       // Convert the dueDate to the local timezone
       final scheduledDate = tz.TZDateTime.from(dueDate, location);
@@ -1116,6 +1107,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         androidScheduleMode: AndroidScheduleMode
             .exactAllowWhileIdle, // Exact schedule even when idle
       );
+      print("Scheduled Date: $scheduledDate");
     } catch (e) {
       print('Error scheduling notification: $e');
     }
@@ -1173,6 +1165,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error creating task: ${e.toString()}')),
       );
+      print("Error creating task: ${e.toString()}");
     }
   }
 }
