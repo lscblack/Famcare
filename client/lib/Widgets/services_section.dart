@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/emergency_screen.dart';  // Add this import
-
+import '../screens/chat_list_screen.dart';
+import '../screens/MedicalRecords.dart';
 class ServicesSection extends StatelessWidget {
   const ServicesSection({super.key});
   
@@ -26,7 +27,12 @@ class ServicesSection extends StatelessWidget {
             _buildServiceItem(
               FontAwesomeIcons.tablets,
               const Color(0xFF003F5F),
-              () {},
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MedicationManagementScreen()),
+                );
+              },
             ),
             _buildServiceItem(
               FontAwesomeIcons.calendarCheck,
@@ -41,7 +47,12 @@ class ServicesSection extends StatelessWidget {
             _buildServiceItem(
               FontAwesomeIcons.userFriends,
               const Color(0xFF277DA1),
-              () {},
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>   ChatListScreen()),
+                );
+              },
             ),
             _buildServiceItem(
               FontAwesomeIcons.ambulance,

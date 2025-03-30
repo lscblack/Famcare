@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:client/screens/dashboard_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -23,6 +24,15 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF48B1A5)),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          },
+        ),
         foregroundColor: Colors.black87,
         title: FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance

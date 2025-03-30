@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'calendar_screen.dart';
 import 'record_screen.dart';
+import 'package:client/screens/dashboard_screen.dart';
 
 // Color constants
 const primaryGreen = Color(0xFF499F97);
@@ -56,6 +57,15 @@ class _ChatListScreenState extends State<ChatListScreen> with SingleTickerProvid
       backgroundColor: primaryBg,
       appBar: AppBar(
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          },
+        ),
         backgroundColor: primaryGreen,
         title: const Text(
           'Conversations',
@@ -272,7 +282,7 @@ class _FilterChip extends StatelessWidget {
       label: Text(
         label,
         style: TextStyle(
-          color: selected ? Colors.white : Colors.white70,
+          color: selected ? Colors.white : Colors.black,
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         ),
       ),

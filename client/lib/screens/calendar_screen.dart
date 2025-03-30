@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:client/screens/dashboard_screen.dart';
 
 class CalendarGrid extends StatefulWidget {
   final DateTime focusedDate;
@@ -756,6 +757,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
             fontFamily: 'Poppins',
             fontWeight: FontWeight.w500,
           ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF48B1A5)),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            );
+          },
         ),
         backgroundColor: Colors.white,
         elevation: 0,

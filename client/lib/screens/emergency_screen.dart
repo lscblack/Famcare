@@ -6,6 +6,8 @@ import 'calendar_screen.dart';
 import 'record_screen.dart';
 import 'chat_list_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../providers/state_provider.dart';
 
 class EmergencyScreen extends StatelessWidget {
   const EmergencyScreen({super.key});
@@ -48,17 +50,43 @@ class EmergencyScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        
-                        // Karekezi section
-                        const SizedBox(height: 10),
-                        const Text(
-                          "Karekezi.... !!!",
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                        // Dashboard Header with User Info and Profile Navigation Button
+                        BlocBuilder<AppCubit, AppState>(
+                          builder: (context, state) {
+                            // Access the user info from the AppCubit state
+                            final userInfo = state is AppAuthenticated ? state.user : null;
+
+                            // You can now return the Text widget inside the builder
+                            return Column(
+                              children: [
+                                if (userInfo != null) ...[
+                                  // Karekezi section
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    userInfo.name ?? 'User Name', // Fallback if name is null
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ] else ...[
+                                  // Optionally, show something else if userInfo is null
+                                  const SizedBox(height: 10),
+                                  const Text(
+                                    'No user info available',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
+
                         const SizedBox(height: 10),
                         const Text(
                           "Are you in Emergency?",
