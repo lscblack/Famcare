@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../screens/calendar_screen.dart';
 import '../screens/emergency_screen.dart';  // Add this import
-import '../screens/chat_list_screen.dart';
-import '../screens/MedicalRecords.dart';
+import '../screens/userProgress.dart';
+import '../screens/health_log.dart';
 class ServicesSection extends StatelessWidget {
   const ServicesSection({super.key});
   
@@ -25,12 +25,12 @@ class ServicesSection extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildServiceItem(
-              FontAwesomeIcons.tablets,
-              const Color(0xFF003F5F),
+              FontAwesomeIcons.fileMedical,
+              const Color(0xFF009F9F),
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const MedicationManagementScreen()),
+                  MaterialPageRoute(builder: (context) => const HealthLogTrackerScreen()),
                 );
               },
             ),
@@ -45,12 +45,12 @@ class ServicesSection extends StatelessWidget {
               },
             ),
             _buildServiceItem(
-              FontAwesomeIcons.userFriends,
+              FontAwesomeIcons.gamepad,
               const Color(0xFF277DA1),
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>   ChatListScreen()),
+                  MaterialPageRoute(builder: (context) =>   UserProgressScreen()),
                 );
               },
             ),

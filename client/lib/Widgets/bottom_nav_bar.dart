@@ -42,7 +42,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       alignment: Alignment.center,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(
@@ -51,9 +51,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.white10,
                 spreadRadius: 1,
-                blurRadius: 10,
+                blurRadius: 0,
               ),
             ],
           ),
@@ -69,20 +69,22 @@ class _BottomNavBarState extends State<BottomNavBar> {
           ),
         ),
         Positioned(
-          top: -28,
-          child: FloatingActionButton(
-            onPressed: () {
-              // Add button action here
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => MedicationManagementScreen()),
-              );
-            },
-            backgroundColor: const Color(0xFF3F8585),
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+          top: -24,
+          child: Padding(
+            padding: EdgeInsets.all(8.0), // Adds extra touch area
+            child: FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (context) => MedicationManagementScreen()),
+                );
+              },
+              backgroundColor: const Color(0xFF3F8585),
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(Icons.add, size: 40, color: Colors.white),
             ),
-            child: const Icon(Icons.add, size: 40, color: Colors.white),
           ),
         ),
       ],
@@ -95,7 +97,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
       child: Icon(
         icon,
         color: _selectedIndex == index ? const Color(0xFF3F8585) : const Color(0xFF3F8585),
-        size: 28,
+        size: 33,
       ),
     );
   }
