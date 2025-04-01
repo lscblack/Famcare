@@ -1,4 +1,5 @@
 import 'package:client/Splash/SplashScreen1.dart';
+import 'package:client/screens/auth/register_screen.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
 import 'package:client/screens/test.dart';
@@ -80,7 +81,7 @@ class FamCare extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
-          initialRoute: '/',
+          initialRoute: '/register',
           routes: {
             // '/': (context) => RwandaPhoneAuth(),
             '/': (context) => Splashscreen1(),
