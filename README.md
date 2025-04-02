@@ -1,6 +1,7 @@
 # **FamCare - Family Healthcare Management App**  
 
 ![FamCare Logo](https://github.com/user-attachments/assets/a120c43e-7ecb-4c15-b342-302dc07052d2)
+
 *The **FamCare** app is a family health management platform designed to simplify the coordination of caregiving tasks, medication schedules, and health records. The app utilizes **Flutter** for the frontend, **FastAPI** for the backend, **Firebase** for authentication and database management, and **Machine Learning algorithms** for predictive features, ensuring a seamless user experience for family health management.*  
 
 ---
