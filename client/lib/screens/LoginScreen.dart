@@ -74,41 +74,41 @@ class _LoginScreenState extends State<LoginScreen> {
               return;
             }
 
-            User? firebaseUser = FirebaseAuth.instance.currentUser;
-            if (firebaseUser != null) {
-              // // Get user data from Firestore
-              DocumentSnapshot userDoc = await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(firebaseUser?.uid)
-                  .get();
+            // User? firebaseUser = FirebaseAuth.instance.currentUser;
+            // if (firebaseUser != null) {
+            //   // // Get user data from Firestore
+            //   DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            //       .collection('users')
+            //       .doc(firebaseUser?.uid)
+            //       .get();
 
-              if (userDoc.exists) {
-                final userData = userDoc.data() as Map<String, dynamic>;
-                // print(userData);
-                // Create UserInfoFam object
-                UserInfoFam user = UserInfoFam(
-                  id: firebaseUser.uid,
-                  name: userData['fullName'] ?? '',
-                  email: userData['email'] ?? firebaseUser.email ?? '',
-                  phone: userData['phone'] ?? _phoneNumber,
-                );
+            //   if (userDoc.exists) {
+            //     final userData = userDoc.data() as Map<String, dynamic>;
+            //     // print(userData);
+            //     // Create UserInfoFam object
+            //     UserInfoFam user = UserInfoFam(
+            //       id: firebaseUser.uid,
+            //       name: userData['fullName'] ?? '',
+            //       email: userData['email'] ?? firebaseUser.email ?? '',
+            //       phone: userData['phone'] ?? _phoneNumber,
+            //     );
 
-                //   // Save user to app state
-                final appCubit = context.read<AppCubit>();
-                await appCubit.saveUser(user);
+            //     //   // Save user to app state
+            //     final appCubit = context.read<AppCubit>();
+            //     await appCubit.saveUser(user);
 
-                // Navigate to dashboard
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (context) => DashboardScreen()),
-                );
-              }
-            }
+            //     // Navigate to dashboard
+            //     Navigator.of(context).pushReplacement(
+            //       MaterialPageRoute(builder: (context) => DashboardScreen()),
+            //     );
+            //   }
+            // }
 
-            // // Always send OTP
-            // await _sendOtp();
-            // setState(() {
-            //   _showOtpField = true;
-            // });
+            // Always send OTP
+            await _sendOtp();
+            setState(() {
+              _showOtpField = true;
+            });
           }
         }
       } on FirebaseAuthException catch (e) {
