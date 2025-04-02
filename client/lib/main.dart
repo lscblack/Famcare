@@ -2,6 +2,7 @@ import 'package:client/Splash/SplashScreen1.dart';
 import 'package:client/screens/auth/register_screen.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
+import 'package:client/screens/reset_screen.dart';
 import 'package:client/screens/test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -86,6 +87,7 @@ class FamCare extends StatelessWidget {
             // '/': (context) => RwandaPhoneAuth(),
             '/': (context) => Splashscreen1(),
             '/home': (context) => DashboardScreen(),
+            '/reset': (context) => PasswordResetScreen(),
             '/profile': (context) => ProfilePage(),
             '/register': (context) => RegisterScreen(),
             '/login': (context) => LoginScreen(),

@@ -504,6 +504,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: TextButton(
                           onPressed: () {
                             // Handle forgot password
+                            Navigator.pushNamed(context, '/reset');
                           },
                           child: const Text(
                             'Forgot Password',
@@ -574,22 +575,22 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          InkWell(
-                            onTap: () {},
-                            child: const Icon(Icons.g_mobiledata_rounded,
-                                size: 39, color: Colors.red),
-                          ),
-                          const SizedBox(width: 20),
-                          InkWell(
-                            onTap: () {},
-                            child: const Icon(Icons.apple,
-                                size: 30, color: Colors.black),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.center,
+                      //   children: [
+                      //     InkWell(
+                      //       onTap: () {},
+                      //       child: const Icon(Icons.g_mobiledata_rounded,
+                      //           size: 39, color: Colors.red),
+                      //     ),
+                      //     const SizedBox(width: 20),
+                      //     InkWell(
+                      //       onTap: () {},
+                      //       child: const Icon(Icons.apple,
+                      //           size: 30, color: Colors.black),
+                      //     ),
+                      //   ],
+                      // ),
                       const SizedBox(height: 30),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:client/globals.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import '../screens/dashboard_screen.dart';
 class _FamilyListSection extends StatelessWidget {
   final List<dynamic> familyIds;
 
@@ -443,6 +443,33 @@ class ProfilePage extends StatelessWidget {
 
     // Using StreamBuilder to listen for real-time updates from Firestore.
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: true, // This shows the back button by default
+        leading: Container(
+          margin: const EdgeInsets.all(4.0), // Add some margin around the icon
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.0),
+          ),
+          child: IconButton(
+            icon: const Icon(
+              Icons.chevron_left_rounded,
+              size: 40,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // This will navigate back
+            },
+          ),
+        ),
+        title: const Image(
+          image: AssetImage("assets/logos/logo_name.png"),
+          height: 40, // Adjust height as needed
+        ),
+        centerTitle: true,
+        actions: const [
+          // If you need any actions on the right side
+          SizedBox(width: 48), // This balances the leading icon space
+        ],
+      ),
       backgroundColor: primaryBg,
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
@@ -471,28 +498,6 @@ class ProfilePage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(10.0),
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14.0),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.chevron_left_rounded,
-                        size: 24,
-                        color: Color(0xFF1648CE),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  const Spacer(),
-                  const Image(image: AssetImage("assets/logos/logo_name.png")),
-                  const Spacer(),
-                ],
-              ),
               const SizedBox(height: 0.0),
               Card(
                 color: Colors.white,
@@ -506,7 +511,7 @@ class ProfilePage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Image(image: AssetImage("assets/icon.png")),
+                        const Image(image: AssetImage("assets/logos/trans.png") ,width: 120,),
                         Expanded(
                           child: Container(
                             margin: const EdgeInsets.only(left: 8.0),
@@ -708,7 +713,7 @@ class ProfilePage extends StatelessWidget {
           );
         },
       ),
-      bottomNavigationBar: const BottomBar(),
+      // bottomNavigationBar: const BottomBar(),
     );
   }
 }
