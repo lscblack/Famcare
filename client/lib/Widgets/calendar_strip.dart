@@ -3,15 +3,28 @@ import 'package:flutter/material.dart';
 class CalendarStrip extends StatelessWidget {
   const CalendarStrip({super.key});
 
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
   @override
+
   Widget build(BuildContext context) {
+    final DateTime today = DateTime.now();
+    final DateTime todayDate = DateTime(today.year, today.month, today.day);
+    final DateTime startOfWeek =
+        todayDate.subtract(Duration(days: todayDate.weekday - 1));
+
     return SizedBox(
       height: 80,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: 7,
         itemBuilder: (context, index) {
-          bool isSelected = index == 2;
+          final DateTime currentDate =
+              startOfWeek.add(Duration(days: index));
+          final bool isSelected = _isSameDate(currentDate, todayDate);
+
           return Container(
             width: 50,
             margin: const EdgeInsets.symmetric(horizontal: 5),
@@ -26,7 +39,7 @@ class CalendarStrip extends StatelessWidget {
               children: [
                 const SizedBox(height: 4),
                 Text(
-                  '${index + 1}',
+                  '${currentDate.day}',
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white

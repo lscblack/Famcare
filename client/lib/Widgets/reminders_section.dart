@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'calendar_strip.dart';
-import 'medication_reminder.dart';
+import 'task_reminder.dart';
 
 class RemindersSection extends StatelessWidget {
   const RemindersSection({super.key});
@@ -21,7 +21,7 @@ class RemindersSection extends StatelessWidget {
         const SizedBox(height: 16),
         const CalendarStrip(),
         const SizedBox(height: 16),
-        const MedicationReminder(),
+        const TaskReminder(),
       ],
     );
   }

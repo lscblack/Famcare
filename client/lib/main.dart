@@ -81,7 +81,7 @@ class FamCare extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
-          initialRoute: '/register',
+          initialRoute: '/',
           routes: {
             // '/': (context) => RwandaPhoneAuth(),
             '/': (context) => Splashscreen1(),

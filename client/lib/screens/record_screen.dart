@@ -429,7 +429,8 @@ class _RecordScreenState extends State<RecordScreen> {
         ),
       )
           : SafeArea(
-        child: Column(
+        child:
+         Column(
           children: [
             // Form section (collapsible)
             AnimatedContainer(
@@ -508,7 +509,7 @@ class _RecordScreenState extends State<RecordScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
 
                       // Image URL input section
                       Container(
@@ -534,7 +535,7 @@ class _RecordScreenState extends State<RecordScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       SizedBox(
                         width: double.infinity,
                         height: 56,
