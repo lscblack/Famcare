@@ -333,162 +333,166 @@ class _CalendarGridState extends State<CalendarGrid> {
     );
   }
 
-Widget _buildTaskList() {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) {
-    return const Center(child: Text('Please login to view tasks'));
+  Widget _buildTaskList() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('Please login to view tasks'));
+    }
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots(),
+      builder: (context, userSnapshot) {
+        if (userSnapshot.hasError) {
+          return _buildErrorWidget('Failed to load user data');
+        }
+
+        if (userSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+          return const Center(child: Text('User data not found'));
+        }
+
+        final families =
+            List<String>.from(userSnapshot.data!['families'] ?? []);
+        if (families.isEmpty) {
+          return const Center(child: Text('No family assigned'));
+        }
+
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('tasks')
+              .where('familyId', isEqualTo: families.first)
+              .where('dueDate',
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(
+                    DateTime(_selectedDate.year, _selectedDate.month,
+                        _selectedDate.day),
+                  ))
+              .where('dueDate',
+                  isLessThan: Timestamp.fromDate(
+                    DateTime(_selectedDate.year, _selectedDate.month,
+                        _selectedDate.day + 1),
+                  ))
+              .snapshots(),
+          builder: (context, taskSnapshot) {
+            if (taskSnapshot.hasError) {
+              return _buildErrorWidget('Failed to load tasks');
+            }
+
+            if (taskSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final tasks = taskSnapshot.data?.docs ?? [];
+
+            if (tasks.isEmpty) {
+              return _buildEmptyState(context);
+            }
+
+            return Column(
+              children: [
+                ...tasks.map((doc) => _buildTaskItem(doc)).toList(),
+                const SizedBox(height: 16),
+                _buildAddTaskButton(context),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
-  return StreamBuilder<DocumentSnapshot>(
-    stream: FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .snapshots(),
-    builder: (context, userSnapshot) {
-      if (userSnapshot.hasError) {
-        return _buildErrorWidget('Failed to load user data');
-      }
-
-      if (userSnapshot.connectionState == ConnectionState.waiting) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-        return const Center(child: Text('User data not found'));
-      }
-
-      final families = List<String>.from(userSnapshot.data!['families'] ?? []);
-      if (families.isEmpty) {
-        return const Center(child: Text('No family assigned'));
-      }
-
-      return StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('tasks')
-            .where('familyId', isEqualTo: families.first)
-            .where('dueDate', isGreaterThanOrEqualTo: Timestamp.fromDate(
-              DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day),
-            ))
-            .where('dueDate', isLessThan: Timestamp.fromDate(
-              DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day + 1),
-            ))
-            .snapshots(),
-        builder: (context, taskSnapshot) {
-          if (taskSnapshot.hasError) {
-            return _buildErrorWidget('Failed to load tasks');
-          }
-
-          if (taskSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final tasks = taskSnapshot.data?.docs ?? [];
-
-          if (tasks.isEmpty) {
-            return _buildEmptyState(context);
-          }
-
-          return Column(
-            children: [
-              ...tasks.map((doc) => _buildTaskItem(doc)).toList(),
-              const SizedBox(height: 16),
-              _buildAddTaskButton(context),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
 // Add these missing components
-Widget _buildErrorWidget(String message) {
-  return Column(
-    children: [
-      Icon(Icons.error, color: Colors.red, size: 40),
-      Text(message, style: TextStyle(color: Colors.red)),
-    ],
-  );
-}
+  Widget _buildErrorWidget(String message) {
+    return Column(
+      children: [
+        Icon(Icons.error, color: Colors.red, size: 40),
+        Text(message, style: TextStyle(color: Colors.red)),
+      ],
+    );
+  }
 
+  Widget _buildTaskItem(DocumentSnapshot doc) {
+    final task = doc.data() as Map<String, dynamic>;
+    final dueDate = (task['dueDate'] as Timestamp).toDate();
 
-Widget _buildTaskItem(DocumentSnapshot doc) {
-  final task = doc.data() as Map<String, dynamic>;
-  final dueDate = (task['dueDate'] as Timestamp).toDate();
-
-  return Card(
-    margin: const EdgeInsets.only(bottom: 8),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: ListTile(
-      onTap: () => _showEditStatusDialog(context, doc.id, task['status']),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: _getStatusColor(task['status'])?.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(
-          Icons.task,
-          color: _getStatusColor(task['status']),
-        ),
-      ),
-      title: Text(
-        task['title'],
-        style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-      ),
-      subtitle: Text(
-        DateFormat('hh:mm a').format(dueDate),
-        style: GoogleFonts.poppins(color: Colors.grey[600]),
-      ),
-      trailing: Chip(
-        label: Text(task['status']),
-        backgroundColor: _getStatusColor(task['status'])?.withOpacity(0.1),
-        labelStyle: TextStyle(
-          color: _getStatusColor(task['status']),
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _buildEmptyState(BuildContext context) {
-  return Column(
-    children: [
-      const SizedBox(height: 24),
-      Text(
-        'No tasks for ${DateFormat('MMM dd').format(_selectedDate)}',
-        style: GoogleFonts.poppins(color: Colors.grey),
-      ),
-      const SizedBox(height: 16),
-      _buildAddTaskButton(context),
-    ],
-  );
-}
-
-Widget _buildAddTaskButton(BuildContext context) {
-  return ElevatedButton.icon(
-    onPressed: () => _showAddTaskDialog(context),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF37B5B6),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-    ),
-    icon: const Icon(Icons.add, color: Colors.white),
-    label: Text(
-      'Add Task',
-      style: GoogleFonts.poppins(
-        color: Colors.white,
-        fontWeight: FontWeight.w500,
+      child: ListTile(
+        onTap: () => _showEditStatusDialog(context, doc.id, task['status']),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: _getStatusColor(task['status'])?.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.task,
+            color: _getStatusColor(task['status']),
+          ),
+        ),
+        title: Text(
+          task['title'],
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+        ),
+        subtitle: Text(
+          DateFormat('hh:mm a').format(dueDate),
+          style: GoogleFonts.poppins(color: Colors.grey[600]),
+        ),
+        trailing: Chip(
+          label: Text(task['status']),
+          backgroundColor: _getStatusColor(task['status'])?.withOpacity(0.1),
+          labelStyle: TextStyle(
+            color: _getStatusColor(task['status']),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          'No tasks for ${DateFormat('MMM dd').format(_selectedDate)}',
+          style: GoogleFonts.poppins(color: Colors.grey),
+        ),
+        const SizedBox(height: 16),
+        _buildAddTaskButton(context),
+      ],
+    );
+  }
+
+  Widget _buildAddTaskButton(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () => _showAddTaskDialog(context),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF37B5B6),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      icon: const Icon(Icons.add, color: Colors.white),
+      label: Text(
+        'Add Task',
+        style: GoogleFonts.poppins(
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
 
   void _showAddTaskDialog(BuildContext context) {
     final formKey = GlobalKey<FormState>();
@@ -675,8 +679,15 @@ Widget _buildAddTaskButton(BuildContext context) {
         await _createRecurringTasks(taskRef.id, taskData, repeatOption);
       }
 
-      // Schedule notification
-      await _scheduleNotification(title, dueDate, taskRef.id);
+      final notificationPrefs = userDoc['notificationPreferences'] ?? {};
+      final taskAlertsEnabled = notificationPrefs['taskAlerts'] ?? true;
+
+      // Schedule notification only if enabled
+      if (taskAlertsEnabled) {
+        await _scheduleNotification(title, dueDate, taskRef.id);
+      } else {
+        print("Task alerts are disabled - skipping notification");
+      }
 
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1225,9 +1236,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
         await _createRecurringTasks(taskRef.id, taskData, repeatOption);
       }
 
-      // Schedule notification
-      await _scheduleNotification(title, dueDate, taskRef.id);
+      final notificationPrefs = userDoc['notificationPreferences'] ?? {};
+      final taskAlertsEnabled = notificationPrefs['taskAlerts'] ?? true;
 
+      // Schedule notification only if enabled
+      if (taskAlertsEnabled) {
+        await _scheduleNotification(title, dueDate, taskRef.id);
+      } else {
+        print("Task alerts are disabled - skipping notification");
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Task created successfully')),
       );

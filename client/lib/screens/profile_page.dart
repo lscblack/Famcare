@@ -1,5 +1,9 @@
-import 'package:client/Widgets/bottom_bar.dart';
+import 'package:client/Widgets/bottom_nav_bar.dart';
 import 'package:client/Widgets/profile_card.dart';
+import 'package:client/screens/calendar_screen.dart';
+import 'package:client/screens/chat_list_screen.dart';
+import 'package:client/screens/record_screen.dart';
+import 'package:client/screens/userProgress.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +11,7 @@ import 'package:client/globals.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../screens/dashboard_screen.dart';
+
 class _FamilyListSection extends StatelessWidget {
   final List<dynamic> familyIds;
 
@@ -432,6 +437,15 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  Future<void> _updateNotificationPref(String key, bool value) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      'notificationPreferences.$key': value,
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
@@ -444,7 +458,8 @@ class ProfilePage extends StatelessWidget {
     // Using StreamBuilder to listen for real-time updates from Firestore.
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: true, // This shows the back button by default
+        automaticallyImplyLeading:
+            true, // This shows the back button by default
         leading: Container(
           margin: const EdgeInsets.all(4.0), // Add some margin around the icon
           decoration: BoxDecoration(
@@ -470,7 +485,6 @@ class ProfilePage extends StatelessWidget {
           SizedBox(width: 48), // This balances the leading icon space
         ],
       ),
-      backgroundColor: primaryBg,
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -511,7 +525,10 @@ class ProfilePage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Image(image: AssetImage("assets/logos/trans.png") ,width: 120,),
+                        const Image(
+                          image: AssetImage("assets/logos/trans.png"),
+                          width: 120,
+                        ),
                         Expanded(
                           child: Container(
                             margin: const EdgeInsets.only(left: 8.0),
@@ -593,18 +610,6 @@ class ProfilePage extends StatelessWidget {
                 ),
               ),
               _FamilyListSection(familyIds: families.cast<String>()),
-              const SizedBox(height: 0.0),
-              const ProfileCard(
-                iconPath: "assets/fluent_book-exclamation-mark-20-filled.svg",
-                title: 'Health History',
-                description: "Check your All Medical History",
-              ),
-              const SizedBox(height: 0.0),
-              ProfileCard(
-                iconPath: "assets/mdi_account-child.svg",
-                title: "${userName.split(' ')[0]}'s History",
-                description: "Receive and save up. Points to receive gifts",
-              ),
               Card(
                 color: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -612,34 +617,50 @@ class ProfilePage extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
                     children: [
-                      const Row(
-                        children: [
-                          Icon(
-                            Icons.settings,
-                            color: primaryGreen,
-                          ),
-                          SizedBox(width: 12.0),
-                          Text(
-                            "Profile Settings",
-                            style: TextStyle(
-                              color: Color(0xFF091F44),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      SwitchListTile(
+                        title: const Text('Medication Reminders'),
+                        value: userData['notificationPreferences']
+                                ?['medicationReminders'] ??
+                            true,
+                        onChanged: (value) => _updateNotificationPref(
+                            'medicationReminders', value),
                       ),
-                      IconButton(
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.chevron_right_rounded,
-                          color: primaryGreen,
-                        ),
+                      SwitchListTile(
+                        title: const Text('Task Alerts'),
+                        value: userData['notificationPreferences']
+                                ?['taskAlerts'] ??
+                            true,
+                        onChanged: (value) =>
+                            _updateNotificationPref('taskAlerts', value),
                       ),
                     ],
                   ),
+                ),
+              ),
+              const SizedBox(height: 0.0),
+              InkWell(
+                onTap: () => Navigator.pushNamed(context, '/record'),
+                child: const ProfileCard(
+                  iconPath: "assets/fluent_book-exclamation-mark-20-filled.svg",
+                  title: 'Health History',
+                  description: "Check your All Medical History",
+                ),
+              ),
+              const SizedBox(height: 0.0),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => UserProgressScreen()),
+                  );
+                },
+                child: ProfileCard(
+                  iconPath: "assets/mdi_account-child.svg",
+                  title: "${userName.split(' ')[0]}'s History",
+                  description: "Receive and save up. Points to receive gifts",
                 ),
               ),
               Card(
@@ -669,7 +690,9 @@ class ProfilePage extends StatelessWidget {
                         ],
                       ),
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/reset');
+                        },
                         icon: const Icon(
                           Icons.chevron_right_rounded,
                           color: primaryGreen,
@@ -713,7 +736,34 @@ class ProfilePage extends StatelessWidget {
           );
         },
       ),
-      // bottomNavigationBar: const BottomBar(),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 2,
+        onHomePressed: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const DashboardScreen()));
+        },
+        onCalendarPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CalendarScreen()),
+          );
+        },
+        onRecordPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RecordScreen()),
+          );
+        },
+        onChatPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChatListScreen()),
+          );
+        },
+        onAddPressed: () {
+          print('FAB Clicked');
+        },
+      ),
     );
   }
 }
