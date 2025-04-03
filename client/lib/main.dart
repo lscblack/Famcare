@@ -1,6 +1,5 @@
 import 'package:client/Splash/SplashScreen1.dart';
 import 'package:client/providers/theme_cubit.dart';
-import 'package:client/screens/auth/register_screen.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
 import 'package:client/screens/reset_screen.dart';
