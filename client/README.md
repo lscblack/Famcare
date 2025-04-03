@@ -144,13 +144,6 @@ lib/
 - [Firebase Docs](https://firebase.google.com/docs)  
 - [Flutter Docs](https://flutter.dev/docs)  
 
----
-
-> *"FamCare reduced missed medication doses by 80% for our Alzheimer’s patient."*  
-> — **Sarah K., Caregiver**  
-
-**Build · Test · Empower**  
-
 --- 
 
 ### **Key Improvements**:  
