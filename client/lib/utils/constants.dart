@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class AppColors {
@@ -5,6 +6,8 @@ class AppColors {
   static const Color greyLight = Color(0xFFEEEEEE);
   static const Color greyDark = Color(0xFF666666);
 }
+
+
 
 class FirestorePaths {
   static const String users = 'users';

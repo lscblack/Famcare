@@ -92,16 +92,16 @@ class DashboardHeader extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w400,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).textTheme.bodyLarge!.color,
                       fontFamily: 'Poppins',
                     ),
                   ),
                   Text(
                     userName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF48B1A5),
+                      color: Theme.of(context).colorScheme.primary,
                       fontFamily: 'Poppins',
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -111,7 +111,7 @@ class DashboardHeader extends StatelessWidget {
                       userEmail!,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[500],
+                        color: Theme.of(context).textTheme.bodyLarge!.color,
                         fontFamily: 'Poppins',
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -127,20 +127,20 @@ class DashboardHeader extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF48B1A5),
+                  color: Theme.of(context).colorScheme.tertiary,
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF48B1A5).withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.tertiary.withOpacity(0.3),
                       spreadRadius: 1,
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.logout,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   size: 26,
                 ),
               ),

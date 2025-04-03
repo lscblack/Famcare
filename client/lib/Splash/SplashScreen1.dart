@@ -23,13 +23,11 @@ class Splashscreen1 extends StatelessWidget {
         Widget nextScreen;
 
         if (state is AppInitial || state is AppLoading) {
-          print("hell");
           return const Center(child: CircularProgressIndicator());
 
         }
         else if (state is AppAuthenticated) {
           nextScreen = const DashboardScreen();
-          print("hell");
         }
         else {
           nextScreen = const Splashscreen2();

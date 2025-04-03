@@ -19,7 +19,7 @@ class TaskReminder extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         margin: const EdgeInsets.only(top: 15),
-        decoration: _containerDecoration(),
+        decoration: _containerDecoration(context),
         child: const Text('Please login to view tasks'),
       );
     }
@@ -34,7 +34,7 @@ class TaskReminder extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.only(top: 15),
-            decoration: _containerDecoration(),
+            decoration: _containerDecoration(context),
             child: const Center(child: CircularProgressIndicator()),
           );
         }
@@ -44,7 +44,7 @@ class TaskReminder extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.only(top: 15),
-            decoration: _containerDecoration(),
+            decoration: _containerDecoration(context),
             child: const Text('No family assigned'),
           );
         }
@@ -62,7 +62,7 @@ class TaskReminder extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(top: 15),
-                decoration: _containerDecoration(),
+                decoration: _containerDecoration(context),
                 child: const Center(child: CircularProgressIndicator()),
               );
             }
@@ -72,7 +72,7 @@ class TaskReminder extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.all(20),
               margin: const EdgeInsets.only(top: 15),
-              decoration: _containerDecoration(),
+              decoration: _containerDecoration(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,12 +84,12 @@ class TaskReminder extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 22,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF003F5F),
+                          color: Theme.of(context).textTheme.titleSmall!.color,
                         ),
                       ),
                       Chip(
                         label: Text('${tasks.length} tasks'),
-                        backgroundColor: const Color(0xFFE3F9F9),
+                        backgroundColor: Theme.of(context).colorScheme.secondary,
                       ),
                     ],
                   ),
@@ -109,8 +109,8 @@ class TaskReminder extends StatelessWidget {
     );
   }
 
-  BoxDecoration _containerDecoration() => BoxDecoration(
-    color: Colors.white,
+  BoxDecoration _containerDecoration(context) => BoxDecoration(
+    color: Theme.of(context).colorScheme.surface,
     borderRadius: BorderRadius.circular(20),
     boxShadow: [
       BoxShadow(

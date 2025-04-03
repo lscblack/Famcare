@@ -114,7 +114,7 @@ class _PlanSectionState extends State<PlanSection> {
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.only(top: 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -140,8 +140,8 @@ class _PlanSectionState extends State<PlanSection> {
                 padding: const EdgeInsets.only(left: 14.0),
                 child: Text(
                   '$_completedCount of $_totalCount completed',
-                  style: const TextStyle(
-                    color: Colors.black,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge!.color,
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
                   ),

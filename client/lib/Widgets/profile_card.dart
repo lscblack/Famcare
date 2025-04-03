@@ -17,7 +17,7 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -33,9 +33,9 @@ class ProfileCard extends StatelessWidget {
                   const SizedBox(width: 12.0),
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF091F44),
+                      color: Theme.of(context).textTheme.bodyMedium!.color,
                     ),
                   ),
                 ]),
@@ -57,7 +57,7 @@ class ProfileCard extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 16.0),
               child: Text(
                 description,
-                style: const TextStyle(color: Color(0xFF091F44)),
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium!.color),
                 textAlign: TextAlign.left,
               ),
             ),

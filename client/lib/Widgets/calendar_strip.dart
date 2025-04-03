@@ -8,7 +8,6 @@ class CalendarStrip extends StatelessWidget {
   }
 
   @override
-
   Widget build(BuildContext context) {
     final DateTime today = DateTime.now();
     final DateTime todayDate = DateTime(today.year, today.month, today.day);
@@ -21,8 +20,7 @@ class CalendarStrip extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: 7,
         itemBuilder: (context, index) {
-          final DateTime currentDate =
-              startOfWeek.add(Duration(days: index));
+          final DateTime currentDate = startOfWeek.add(Duration(days: index));
           final bool isSelected = _isSameDate(currentDate, todayDate);
 
           return Container(
@@ -43,7 +41,7 @@ class CalendarStrip extends StatelessWidget {
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white
-                        : const Color.fromARGB(255, 30, 68, 64),
+                        : Theme.of(context).textTheme.titleSmall!.color,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -52,7 +50,7 @@ class CalendarStrip extends StatelessWidget {
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white
-                        : const Color.fromARGB(255, 30, 68, 64),
+                        : Theme.of(context).textTheme.titleSmall!.color,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

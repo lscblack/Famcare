@@ -1,9 +1,13 @@
 import 'package:client/Splash/SplashScreen1.dart';
+import 'package:client/providers/theme_cubit.dart';
 import 'package:client/screens/auth/register_screen.dart';
 import 'package:client/screens/chat_screen.dart';
 import 'package:client/screens/dashboard_screen.dart';
 import 'package:client/screens/reset_screen.dart';
 import 'package:client/screens/test.dart';
+import 'package:client/services/theme_service.dart';
+import 'package:client/themes/theme.dart';
+import 'package:client/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -59,11 +63,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initNotifications();
+  final themeService = ThemeService();
 
   runApp(
     MultiBlocProvider(
       providers: [
         BlocProvider<AppCubit>(create: (context) => AppCubit()),
+        BlocProvider(create: (ctx) => ThemeCubit(themeService)),
       ],
       child: const FamCare(),
     ),
@@ -79,9 +85,14 @@ class FamCare extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AppCubit, AppState>(
       builder: (context, state) {
+    return BlocBuilder<ThemeCubit, bool>(
+      builder: (context, isDark) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           navigatorKey: navigatorKey,
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
           initialRoute: '/',
           routes: {
             // '/': (context) => RwandaPhoneAuth(),
@@ -97,6 +108,8 @@ class FamCare extends StatelessWidget {
             '/record': (context) => RecordScreen(),
           },
         );
+      },
+    );
       },
     );
   }
